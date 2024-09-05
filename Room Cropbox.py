@@ -74,7 +74,7 @@ def get_model_curves(groups):
         curve_dict[group.Name] = element
     return curve_dict
 
-def create_unit_views(view, room_curve, group_name, num):
+def create_unit_views(view, room_curve, group_name, num, prefix):
     # group_elements = group.GetMemberIds()
 
     # # Extract Room and Room Curve
@@ -82,7 +82,7 @@ def create_unit_views(view, room_curve, group_name, num):
 
 
     # Duplicate View as dependent
-    newName = group_name.replace("04", num, 1)
+    newName = prefix + "-" + group_name.replace("04", num, 1)
     newView = duplicate_view(view, newName)
 
     # Set view crop
@@ -112,20 +112,20 @@ def get_only_range(views, range):
 def start():
     views = UnwrapElement(IN[0])
     range = UnwrapElement(IN[2])
-
+    prefix = UnwrapElement(IN[3])
     
     base_view_id = ElementId(UnwrapElement(IN[1]))    
     model_detail_group = get_model_groups(base_view_id)
-    model_curves = get_model_curves(model_detail_group)
+    # model_curves = get_model_curves(model_detail_group)
 
 
-    view_range = get_only_range(views, range)
-    for view_group in view_range:
-        view = view_group[0]
-        num = view_group[1]
-        for group_name, curve in model_curves.items():
-            print(view, curve, group_name, num)
-            create_unit_views(view, curve, group_name, num)
+    # view_range = get_only_range(views, range)
+    # for view_group in view_range:
+    #     view = view_group[0]
+    #     num = view_group[1]
+    #     for group_name, curve in model_curves.items():
+    #         print(view, curve, group_name, num)
+    #         create_unit_views(view, curve, group_name, num, prefix)
 
 
 

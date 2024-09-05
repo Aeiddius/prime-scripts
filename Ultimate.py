@@ -118,12 +118,12 @@ def _get_all_unit_views(elements):
     return unit_plans
 
 
-def duplicate_view(view, name):
-    newId = view.Duplicate(ViewDuplicateOption.AsDependent)
-    newView = doc.GetElement(newId)
-    newView.CropBoxVisible = False
-    newView.Name = name
-    return newView
+# def duplicate_view(view, name):
+#     newId = view.Duplicate(ViewDuplicateOption.AsDependent)
+#     newView = doc.GetElement(newId)
+#     newView.CropBoxVisible = False
+#     newView.Name = name
+#     return newView
 
 plan_dict = {
     "Floor Plan": ViewType.FloorPlan,
@@ -170,7 +170,6 @@ def start():
         for el in elem_cleaned:
             viewplan_name = el.get_Name()
             if viewplan_name in base_view_name: continue
-            print(viewplan_name)
             duplicate_view(el, viewplan_name + "-U", view_family_type)
     else:
         print("Duplicate is turned off.")

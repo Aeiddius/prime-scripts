@@ -130,7 +130,7 @@
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
       "NodeType": "PythonScriptNode",
-      "Code": "import clr\r\nimport math\r\nimport re\r\n\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import CurveLoop, ElementId, ViewFamilyType, BoundingBoxXYZ\r\nfrom Autodesk.Revit.DB import ViewPlan, ViewPlacementOnSheetStatus, ForgeTypeId\r\nfrom Autodesk.Revit.DB import ViewType\r\nfrom Autodesk.Revit.DB.Architecture import Room\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import ViewDuplicateOption, FilteredElementCollector, ViewFamily\r\n\r\n\r\nclr.AddReference('RevitServices')\r\nclr.AddReference('RevitAPI')\r\nclr.AddReference('RevitNodes')\r\nclr.AddReference('RevitAPIUI')\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nuidoc = DocumentManager.Instance.CurrentUIApplication.ActiveUIDocument\r\n\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n\r\ndef print_member(obj):\r\n    for i in dir(obj):\r\n        print(i)\r\n\r\ndef get_element_via_parameter(elements, parameter_name, parameter_value):\r\n    result = []\r\n    for el in elements:\r\n        param_ViewType = el.GetParameters(parameter_name)[0]\r\n        if param_ViewType.AsValueString() == parameter_value:\r\n            result.append(el)\r\n            continue\r\n    return result\r\n\r\n\r\ndef get_all_view_type(elements, view_type):\r\n    result = []\r\n    for el in elements:\r\n        if el.ViewType == view_type:\r\n            result.append(el)\r\n    return result\r\n\r\n\r\ndef get_all_non_sheet(elements):\r\n    result = []\r\n    for el in elements:\r\n        \r\n        sheet_status = el.GetPlacementOnSheetStatus()\r\n        if sheet_status == ViewPlacementOnSheetStatus.NotApplicable:\r\n            result.append(el)\r\n        if sheet_status == ViewPlacementOnSheetStatus.NotPlaced:\r\n            result.append(el)\r\n        if sheet_status == ViewPlacementOnSheetStatus.PartiallyPlaced:\r\n            continue\r\n        if sheet_status == ViewPlacementOnSheetStatus.CompletelyPlaced:\r\n            continue\r\n    return result\r\n\r\ndef clean_view_list(elements, exclude_name):\r\n    result = []\r\n    exn = [name + \"-U\" for name in exclude_name]\r\n    for el in elements:\r\n        if el.Name in exn: continue\r\n        if \"-\" not in el.get_Name():\r\n            continue\r\n        result.append(el)\r\n    return result\r\n\r\ndef get_elementType(doc, family_type_name, view_type):\r\n    view_types = FilteredElementCollector(doc).OfClass(ViewFamilyType).ToElements()\r\n    for vt in view_types:\r\n        if vt.get_Name() == family_type_name and vt.ViewFamily == view_type:\r\n            return vt\r\n    return None\r\n\r\ndef set_viewfamily_type(element, family_type):\r\n    param_ViewType = element.GetParameters(\"Type\")[0]\r\n    param_ViewType.Set(family_type.Id)\r\n\r\n\r\ndef duplicate_view(element, name, family_type):\r\n    newId = element.Duplicate(ViewDuplicateOption.Duplicate)\r\n    dupli_element = doc.GetElement(newId)\r\n    dupli_element.CropBoxVisible = False\r\n    dupli_element.Name = name\r\n    \r\n    set_viewfamily_type(dupli_element, family_type)\r\n\r\n    return dupli_element\r\n\r\ndef contains_number_regex(s):\r\n    return bool(re.search(r'\\d', s))\r\n\r\ndef _get_all_unit_views(elements):\r\n    unit_plans = []\r\n    for el in elements:\r\n        if not el.Name.endswith(\"-U\"): continue\r\n        if \"-B-\" in el.Name: continue # Remove Building B\r\n        if not contains_number_regex(el.Name): continue\r\n        unit_plans.append(el)\r\n    return unit_plans\r\n\r\n\r\ndef duplicate_view(view, name):\r\n    newId = view.Duplicate(ViewDuplicateOption.AsDependent)\r\n    newView = doc.GetElement(newId)\r\n    newView.CropBoxVisible = False\r\n    newView.Name = name\r\n    return newView\r\n\r\nplan_dict = {\r\n    \"Floor Plan\": ViewType.FloorPlan,\r\n    \"Ceiling Plan\": ViewType.CeilingPlan\r\n}\r\n\r\nfamily_dict = {\r\n    \"Floor Plan\": ViewFamily.FloorPlan,\r\n    \"Ceiling Plan\": ViewFamily.CeilingPlan\r\n}\r\n\r\nelements = UnwrapElement(IN[0])\r\nview_group = UnwrapElement(IN[1])\r\ndiscipline = UnwrapElement(IN[2])\r\nplan_type = UnwrapElement(IN[3])\r\nbase_view_name = UnwrapElement(IN[4])\r\nfamily_type = UnwrapElement(IN[5])\r\n# family_type = f\"{discipline} Unit Plan\"\r\n\r\nisDuplicateOn = UnwrapElement(IN[6])\r\n\r\nprocessed_elements = []\r\n\r\n@transaction\r\ndef start():\r\n    global processed_elements\r\n    # view_types = FilteredElementCollector(doc).OfClass(Views).ToElements()\r\n    \r\n    elem_present = get_element_via_parameter(elements, \"View Type\", view_group)\r\n\r\n    elem_discipline = get_element_via_parameter(elem_present, \"Discipline\", discipline)\r\n\r\n    elem_floorplan = get_all_view_type(elem_discipline, plan_dict[plan_type])\r\n\r\n    elem_non_sheet = get_all_non_sheet(elem_floorplan)\r\n\r\n    elem_cleaned = clean_view_list(elem_non_sheet, base_view_name)\r\n\r\n    view_family_type = get_elementType(doc, family_type, family_dict[plan_type])\r\n    \r\n    unit_plans = _get_all_unit_views(elem_non_sheet)\r\n    if isDuplicateOn:\r\n        print(\"Duplicate is turned on.\")\r\n        for el in elem_cleaned:\r\n            viewplan_name = el.get_Name()\r\n            if viewplan_name in base_view_name: continue\r\n            print(viewplan_name)\r\n            duplicate_view(el, viewplan_name + \"-U\", view_family_type)\r\n    else:\r\n        print(\"Duplicate is turned off.\")\r\n\r\n    processed_elements = unit_plans\r\n\r\nstart()\r\n\r\nOUT = [output.getvalue(), processed_elements]\r\n\r\n\r\n",
+      "Code": "import clr\r\nimport math\r\nimport re\r\n\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import CurveLoop, ElementId, ViewFamilyType, BoundingBoxXYZ\r\nfrom Autodesk.Revit.DB import ViewPlan, ViewPlacementOnSheetStatus, ForgeTypeId\r\nfrom Autodesk.Revit.DB import ViewType\r\nfrom Autodesk.Revit.DB.Architecture import Room\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import ViewDuplicateOption, FilteredElementCollector, ViewFamily\r\n\r\n\r\nclr.AddReference('RevitServices')\r\nclr.AddReference('RevitAPI')\r\nclr.AddReference('RevitNodes')\r\nclr.AddReference('RevitAPIUI')\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nuidoc = DocumentManager.Instance.CurrentUIApplication.ActiveUIDocument\r\n\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n\r\ndef print_member(obj):\r\n    for i in dir(obj):\r\n        print(i)\r\n\r\ndef get_element_via_parameter(elements, parameter_name, parameter_value):\r\n    result = []\r\n    for el in elements:\r\n        param_ViewType = el.GetParameters(parameter_name)[0]\r\n        if param_ViewType.AsValueString() == parameter_value:\r\n            result.append(el)\r\n            continue\r\n    return result\r\n\r\n\r\ndef get_all_view_type(elements, view_type):\r\n    result = []\r\n    for el in elements:\r\n        if el.ViewType == view_type:\r\n            result.append(el)\r\n    return result\r\n\r\n\r\ndef get_all_non_sheet(elements):\r\n    result = []\r\n    for el in elements:\r\n        \r\n        sheet_status = el.GetPlacementOnSheetStatus()\r\n        if sheet_status == ViewPlacementOnSheetStatus.NotApplicable:\r\n            result.append(el)\r\n        if sheet_status == ViewPlacementOnSheetStatus.NotPlaced:\r\n            result.append(el)\r\n        if sheet_status == ViewPlacementOnSheetStatus.PartiallyPlaced:\r\n            continue\r\n        if sheet_status == ViewPlacementOnSheetStatus.CompletelyPlaced:\r\n            continue\r\n    return result\r\n\r\ndef clean_view_list(elements, exclude_name):\r\n    result = []\r\n    exn = [name + \"-U\" for name in exclude_name]\r\n    for el in elements:\r\n        if el.Name in exn: continue\r\n        if \"-\" not in el.get_Name():\r\n            continue\r\n        result.append(el)\r\n    return result\r\n\r\ndef get_elementType(doc, family_type_name, view_type):\r\n    view_types = FilteredElementCollector(doc).OfClass(ViewFamilyType).ToElements()\r\n    for vt in view_types:\r\n        if vt.get_Name() == family_type_name and vt.ViewFamily == view_type:\r\n            return vt\r\n    return None\r\n\r\ndef set_viewfamily_type(element, family_type):\r\n    param_ViewType = element.GetParameters(\"Type\")[0]\r\n    param_ViewType.Set(family_type.Id)\r\n\r\n\r\ndef duplicate_view(element, name, family_type):\r\n    newId = element.Duplicate(ViewDuplicateOption.Duplicate)\r\n    dupli_element = doc.GetElement(newId)\r\n    dupli_element.CropBoxVisible = False\r\n    dupli_element.Name = name\r\n    \r\n    set_viewfamily_type(dupli_element, family_type)\r\n\r\n    return dupli_element\r\n\r\ndef contains_number_regex(s):\r\n    return bool(re.search(r'\\d', s))\r\n\r\ndef _get_all_unit_views(elements):\r\n    unit_plans = []\r\n    for el in elements:\r\n        if not el.Name.endswith(\"-U\"): continue\r\n        if \"-B-\" in el.Name: continue # Remove Building B\r\n        if not contains_number_regex(el.Name): continue\r\n        unit_plans.append(el)\r\n    return unit_plans\r\n\r\n\r\n# def duplicate_view(view, name):\r\n#     newId = view.Duplicate(ViewDuplicateOption.AsDependent)\r\n#     newView = doc.GetElement(newId)\r\n#     newView.CropBoxVisible = False\r\n#     newView.Name = name\r\n#     return newView\r\n\r\nplan_dict = {\r\n    \"Floor Plan\": ViewType.FloorPlan,\r\n    \"Ceiling Plan\": ViewType.CeilingPlan\r\n}\r\n\r\nfamily_dict = {\r\n    \"Floor Plan\": ViewFamily.FloorPlan,\r\n    \"Ceiling Plan\": ViewFamily.CeilingPlan\r\n}\r\n\r\nelements = UnwrapElement(IN[0])\r\nview_group = UnwrapElement(IN[1])\r\ndiscipline = UnwrapElement(IN[2])\r\nplan_type = UnwrapElement(IN[3])\r\nbase_view_name = UnwrapElement(IN[4])\r\nfamily_type = UnwrapElement(IN[5])\r\n# family_type = f\"{discipline} Unit Plan\"\r\n\r\nisDuplicateOn = UnwrapElement(IN[6])\r\n\r\nprocessed_elements = []\r\n\r\n@transaction\r\ndef start():\r\n    global processed_elements\r\n    # view_types = FilteredElementCollector(doc).OfClass(Views).ToElements()\r\n    \r\n    elem_present = get_element_via_parameter(elements, \"View Type\", view_group)\r\n\r\n    elem_discipline = get_element_via_parameter(elem_present, \"Discipline\", discipline)\r\n\r\n    elem_floorplan = get_all_view_type(elem_discipline, plan_dict[plan_type])\r\n\r\n    elem_non_sheet = get_all_non_sheet(elem_floorplan)\r\n\r\n    elem_cleaned = clean_view_list(elem_non_sheet, base_view_name)\r\n\r\n    view_family_type = get_elementType(doc, family_type, family_dict[plan_type])\r\n    \r\n    unit_plans = _get_all_unit_views(elem_non_sheet)\r\n    if isDuplicateOn:\r\n        print(\"Duplicate is turned on.\")\r\n        for el in elem_cleaned:\r\n            viewplan_name = el.get_Name()\r\n            if viewplan_name in base_view_name: continue\r\n            print(viewplan_name)\r\n            duplicate_view(el, viewplan_name + \"-U\", view_family_type)\r\n    else:\r\n        print(\"Duplicate is turned off.\")\r\n\r\n    processed_elements = unit_plans\r\n\r\nstart()\r\n\r\nOUT = [output.getvalue(), processed_elements]\r\n\r\n\r\n",
       "Engine": "CPython3",
       "VariableInputPorts": true,
       "Id": "2352bd9e286347d3938d1477137f847a",
@@ -494,7 +494,7 @@
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
       "NodeType": "PythonScriptNode",
-      "Code": "import clr\r\nimport math\r\nimport sys\r\nimport re\r\n\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import CurveLoop, ElementId, BuiltInCategory, FilteredElementCollector\r\nfrom Autodesk.Revit.DB import ViewPlan, CurveLoop\r\nfrom Autodesk.Revit.DB import DetailLine , ViewType\r\nfrom Autodesk.Revit.DB.Architecture import Room\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import ViewDuplicateOption, Line, ViewFamily\r\n\r\n \r\nclr.AddReference('RevitServices')\r\nclr.AddReference('RevitAPI')\r\nclr.AddReference('RevitNodes')\r\nclr.AddReference('RevitAPIUI')\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nuidoc = DocumentManager.Instance.CurrentUIApplication.ActiveUIDocument\r\n\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n\r\ndef print_member(obj):\r\n    for i in dir(obj):\r\n        print(i)\r\n\r\ndef set_view_crop(view, curve):\r\n    crop_manager = view.GetCropRegionShapeManager()\r\n    crop_shape = crop_manager.GetCropShape()[0]\r\n    crop_manager.SetCropShape(curve)\r\n\r\ndef get_room_curve(group_elements):\r\n    room_curve = CurveLoop()\r\n    for id in group_elements:\r\n        e = doc.GetElement(id)\r\n        if isinstance(e, DetailLine):\r\n            line = e.GeometryCurve\r\n            room_curve.Append(line)\r\n    return room_curve\r\n \r\ndef duplicate_view(view, name):\r\n    newId = view.Duplicate(ViewDuplicateOption.AsDependent)\r\n    newView = doc.GetElement(newId)\r\n    newView.CropBoxVisible = False\r\n    newView.Name = name\r\n    return newView\r\n\r\ndef get_model_groups(base_view_id):\r\n    detail_groups = FilteredElementCollector(doc, base_view_id).OfCategory(BuiltInCategory.OST_IOSDetailGroups).ToElements()\r\n    return detail_groups\r\n\r\ndef get_model_curves(groups):\r\n    curve_dict = {}\r\n    for group in groups:\r\n        group_elements = group.GetMemberIds()\r\n        element = get_room_curve(group_elements)\r\n        curve_dict[group.Name] = element\r\n    return curve_dict\r\n\r\ndef create_unit_views(view, room_curve, group_name, num):\r\n    # group_elements = group.GetMemberIds()\r\n\r\n    # # Extract Room and Room Curve\r\n    # room_curve = get_room_curve(group_elements)\r\n\r\n\r\n    # Duplicate View as dependent\r\n    newName = group_name.replace(\"04\", num, 1)\r\n    newView = duplicate_view(view, newName)\r\n\r\n    # Set view crop\r\n    set_view_crop(newView, room_curve)\r\n\r\ndef get_number_list(views):\r\n    result = []\r\n    for view in views:\r\n        num = re.sub(r'\\D', '', view.Name).strip()\r\n        if num:\r\n            result.append(num)\r\n    return result\r\n\r\ndef get_only_range(views, range):\r\n    range_min = range[0]\r\n    range_max = range[1]\r\n\r\n    accepted_views = []\r\n    for view in views:\r\n        num = re.sub(r'\\D', '', view.Name).strip()\r\n        num_int = int(num)\r\n        if num_int < range_min or num_int > range_max: continue\r\n        accepted_views.append([view, num])\r\n    return accepted_views\r\n\r\n@transaction\r\ndef start():\r\n    views = UnwrapElement(IN[0])\r\n    range = UnwrapElement(IN[2])\r\n\r\n    \r\n    base_view_id = ElementId(UnwrapElement(IN[1]))    \r\n    model_detail_group = get_model_groups(base_view_id)\r\n    model_curves = get_model_curves(model_detail_group)\r\n\r\n\r\n    view_range = get_only_range(views, range)\r\n    for view_group in view_range:\r\n        view = view_group[0]\r\n        num = view_group[1]\r\n        for group_name, curve in model_curves.items():\r\n            print(view, curve, group_name, num)\r\n            create_unit_views(view, curve, group_name, num)\r\n\r\n\r\n\r\nstart()\r\n\r\nOUT = output.getvalue()\r\n\r\n\r\n",
+      "Code": "import clr\r\nimport math\r\nimport sys\r\nimport re\r\n\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import CurveLoop, ElementId, BuiltInCategory, FilteredElementCollector\r\nfrom Autodesk.Revit.DB import ViewPlan, CurveLoop\r\nfrom Autodesk.Revit.DB import DetailLine , ViewType\r\nfrom Autodesk.Revit.DB.Architecture import Room\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import ViewDuplicateOption, Line, ViewFamily\r\n\r\n \r\nclr.AddReference('RevitServices')\r\nclr.AddReference('RevitAPI')\r\nclr.AddReference('RevitNodes')\r\nclr.AddReference('RevitAPIUI')\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nuidoc = DocumentManager.Instance.CurrentUIApplication.ActiveUIDocument\r\n\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n\r\ndef print_member(obj):\r\n    for i in dir(obj):\r\n        print(i)\r\n\r\ndef set_view_crop(view, curve):\r\n    crop_manager = view.GetCropRegionShapeManager()\r\n    crop_shape = crop_manager.GetCropShape()[0]\r\n    crop_manager.SetCropShape(curve)\r\n\r\ndef get_room_curve(group_elements):\r\n    room_curve = CurveLoop()\r\n    for id in group_elements:\r\n        e = doc.GetElement(id)\r\n        if isinstance(e, DetailLine):\r\n            line = e.GeometryCurve\r\n            room_curve.Append(line)\r\n    return room_curve\r\n \r\ndef duplicate_view(view, name):\r\n    newId = view.Duplicate(ViewDuplicateOption.AsDependent)\r\n    newView = doc.GetElement(newId)\r\n    newView.CropBoxVisible = False\r\n    newView.Name = name\r\n    return newView\r\n\r\ndef get_model_groups(base_view_id):\r\n    detail_groups = FilteredElementCollector(doc, base_view_id).OfCategory(BuiltInCategory.OST_IOSDetailGroups).ToElements()\r\n    return detail_groups\r\n\r\ndef get_model_curves(groups):\r\n    curve_dict = {}\r\n    for group in groups:\r\n        group_elements = group.GetMemberIds()\r\n        element = get_room_curve(group_elements)\r\n        curve_dict[group.Name] = element\r\n    return curve_dict\r\n\r\ndef create_unit_views(view, room_curve, group_name, num, prefix):\r\n    # group_elements = group.GetMemberIds()\r\n\r\n    # # Extract Room and Room Curve\r\n    # room_curve = get_room_curve(group_elements)\r\n\r\n\r\n    # Duplicate View as dependent\r\n    newName = prefix + \"-\" + group_name.replace(\"04\", num, 1)\r\n    newView = duplicate_view(view, newName)\r\n\r\n    # Set view crop\r\n    set_view_crop(newView, room_curve)\r\n\r\ndef get_number_list(views):\r\n    result = []\r\n    for view in views:\r\n        num = re.sub(r'\\D', '', view.Name).strip()\r\n        if num:\r\n            result.append(num)\r\n    return result\r\n\r\ndef get_only_range(views, range):\r\n    range_min = range[0]\r\n    range_max = range[1]\r\n\r\n    accepted_views = []\r\n    for view in views:\r\n        num = re.sub(r'\\D', '', view.Name).strip()\r\n        num_int = int(num)\r\n        if num_int < range_min or num_int > range_max: continue\r\n        accepted_views.append([view, num])\r\n    return accepted_views\r\n\r\n@transaction\r\ndef start():\r\n    views = UnwrapElement(IN[0])\r\n    range = UnwrapElement(IN[2])\r\n    prefix = UnwrapElement(IN[3])\r\n    \r\n    base_view_id = ElementId(UnwrapElement(IN[1]))    \r\n    model_detail_group = get_model_groups(base_view_id)\r\n    model_curves = get_model_curves(model_detail_group)\r\n\r\n\r\n    view_range = get_only_range(views, range)\r\n    for view_group in view_range:\r\n        view = view_group[0]\r\n        num = view_group[1]\r\n        for group_name, curve in model_curves.items():\r\n            print(view, curve, group_name, num)\r\n            create_unit_views(view, curve, group_name, num, prefix)\r\n\r\n\r\n\r\nstart()\r\n\r\nOUT = output.getvalue()\r\n\r\n\r\n",
       "Engine": "CPython3",
       "VariableInputPorts": true,
       "Id": "3b9529f4fc604ecbb6dfe7faa54a742d",
@@ -521,6 +521,15 @@
           "Id": "0735b5112a4147a98288efd07b7f5180",
           "Name": "IN[2]",
           "Description": "Input #2",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "12f3ed4d8fc043dab8ae033e219426d1",
+          "Name": "IN[3]",
+          "Description": "Input #3",
           "UsingDefaultValue": false,
           "Level": 2,
           "UseLevels": false,
@@ -602,12 +611,12 @@
     {
       "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
       "NodeType": "CodeBlockNode",
-      "Code": "// Input IN[1]\n// \"PV-AR-P-A-04\"\n966419;",
+      "Code": "// Input IN[1]\n// \"PV-AR-P-A-04\"\n1448463;",
       "Id": "0a1d6e4ff68948688d845de7b111736f",
       "Inputs": [],
       "Outputs": [
         {
-          "Id": "5ad6fedc10114a149c80644781d51f66",
+          "Id": "0f304046c7654750b87ff60f2a0b479f",
           "Name": "",
           "Description": "Value of expression at line 3",
           "UsingDefaultValue": false,
@@ -630,6 +639,62 @@
           "Id": "e2d56b5908534d1eb8c14ceb0761fdd8",
           "Name": "",
           "Description": "Value of expression at line 2",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows for DesignScript code to be authored directly"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "// Input IN[3]\n\"AR\";\n\"EL\";\n\"ME\";\n\"PL\";\n\"FP\";",
+      "Id": "918bf476f1b7482c97991f07fddc14a0",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "b79f5bc12a8444fcb3a34a5f38127a18",
+          "Name": "",
+          "Description": "Value of expression at line 2",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "810f63be5480474f8c80d07380e0caf5",
+          "Name": "",
+          "Description": "Value of expression at line 3",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "7e29bcd652104f1d973f16092a1b7a6a",
+          "Name": "",
+          "Description": "Value of expression at line 4",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "5a6dd273acfa42e29bb59dd052e56c72",
+          "Name": "",
+          "Description": "Value of expression at line 5",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "91efb9a0a3304e428e590d2b6a089123",
+          "Name": "",
+          "Description": "Value of expression at line 6",
           "UsingDefaultValue": false,
           "Level": 2,
           "UseLevels": false,
@@ -674,7 +739,7 @@
     {
       "Start": "0a1e673dd6c344a1b25bef7ba02081dc",
       "End": "24a2c53c1f784b968e3463648093306d",
-      "Id": "658eabe237af4e21b8d3d227a861f551",
+      "Id": "a0114f56d4ff40c7bf13d30cc171e0a6",
       "IsHidden": "False"
     },
     {
@@ -692,7 +757,7 @@
     {
       "Start": "20448d08c7da48909ae77622ab4292e8",
       "End": "bf98334f654240ed9d71e7199de863ee",
-      "Id": "09542cc09177411bae0e725b5c937e4e",
+      "Id": "6117373f19474cf99e0f8125a3713b8f",
       "IsHidden": "False"
     },
     {
@@ -732,15 +797,21 @@
       "IsHidden": "False"
     },
     {
-      "Start": "5ad6fedc10114a149c80644781d51f66",
+      "Start": "0f304046c7654750b87ff60f2a0b479f",
       "End": "842e34ac559e41b7950ff47c9f4db951",
-      "Id": "5eecff720462411aa4fc276d84b33889",
+      "Id": "9db4639f8dfa439b837e504b895c328c",
       "IsHidden": "False"
     },
     {
       "Start": "e2d56b5908534d1eb8c14ceb0761fdd8",
       "End": "0735b5112a4147a98288efd07b7f5180",
       "Id": "f261b31e13c34a7090775ea1a1121eec",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "b79f5bc12a8444fcb3a34a5f38127a18",
+      "End": "12f3ed4d8fc043dab8ae033e219426d1",
+      "Id": "f7531ef9b45e44098ef72dc8db6a3ca0",
       "IsHidden": "False"
     }
   ],
@@ -954,8 +1025,8 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 2876.6400047207017,
-        "Y": 310.94573288937892
+        "X": 2898.569357915761,
+        "Y": 301.71232101777497
       },
       {
         "Name": "Acceptable Range",
@@ -964,8 +1035,18 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 2907.2213357697765,
-        "Y": 485.72264246292082
+        "X": 2914.1463946734793,
+        "Y": 476.489230591317
+      },
+      {
+        "Name": "View Family Type",
+        "ShowGeometry": true,
+        "Id": "918bf476f1b7482c97991f07fddc14a0",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 3002.11561578431,
+        "Y": 653.81891508569151
       }
     ],
     "Annotations": [
@@ -1011,11 +1092,11 @@
         ],
         "HasNestedGroups": false,
         "Left": 1505.8019065882133,
-        "Top": -24.782984424467571,
+        "Top": -24.782984424467543,
         "Width": 762.61936381607688,
         "Height": 1028.1398427728584,
         "FontSize": 36.0,
-        "InitialTop": 48.217015575532429,
+        "InitialTop": 48.217015575532457,
         "InitialHeight": 893.1398427728584,
         "TextblockHeight": 63.0,
         "Background": "#FFA4E1FF"
@@ -1049,7 +1130,7 @@
         "Nodes": [],
         "HasNestedGroups": false,
         "Left": 1997.8328799914614,
-        "Top": 48.217015575532429,
+        "Top": 48.217015575532457,
         "Width": 0.0,
         "Height": 0.0,
         "FontSize": 36.0,
@@ -1059,8 +1140,8 @@
         "Background": "#FFC1D676"
       }
     ],
-    "X": -2934.9489101447912,
-    "Y": -180.19783096531177,
-    "Zoom": 0.95763329499550576
+    "X": -3052.6697141586487,
+    "Y": 154.32692298231859,
+    "Zoom": 1.090257264712388
   }
 }
