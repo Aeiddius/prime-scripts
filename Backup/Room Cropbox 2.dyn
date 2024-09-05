@@ -1,0 +1,334 @@
+{
+  "Uuid": "7bc36ab5-7ed9-4156-8ac1-09c73f4291ef",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "Room Cropbox 2",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CustomNodes.Function, DynamoCore",
+      "FunctionSignature": "98c956a4-8e90-46b7-ad56-e4743adfcbaf",
+      "FunctionType": "Graph",
+      "NodeType": "FunctionNode",
+      "Id": "a3b7cd6cf62a42bfb880957a078d3fe3",
+      "Inputs": [
+        {
+          "Id": "78d34e391fe741a0a3832ffedb0eebc1",
+          "Name": "_elements",
+          "Description": "var[]..[]",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "4ff790e8c22349689a7b2fd6541b5be3",
+          "Name": "_view",
+          "Description": "var[]..[]",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "e7e4ac865171417185545532d6ea99f7",
+          "Name": "_margin",
+          "Description": "var[]..[]",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "0e448bb4257c4a1c8d19831ec42b2db4",
+          "Name": "_view",
+          "Description": "return value",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Given elements, crop View around them"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "2;",
+      "Id": "af78b5033f584d2085b449c5b6dc26a0",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "ee45952a4b424b579c419a17b669f413",
+          "Name": "",
+          "Description": "Value of expression at line 1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows for DesignScript code to be authored directly"
+    },
+    {
+      "ConcreteType": "Dynamo.Nodes.DSModelElementSelection, DSRevitNodesUI",
+      "NodeType": "ExtensionNode",
+      "InstanceId": [
+        "bba92d85-a735-4273-bac4-a2038a6502bf-000c8787"
+      ],
+      "Id": "557ab2a7f86f4b588a437696c1ef54e0",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "6fdc4eefae5a45b59c3f5d09afad720d",
+          "Name": "Element",
+          "Description": "The selected elements.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Revit.Application.Document.Current",
+      "Id": "18a5827abf344282806a585c1a285b1c",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "69cfa6ca672a4a75a4728f77ecef52b8",
+          "Name": "Document",
+          "Description": "Document",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Get the current document\n\nDocument.Current: Document"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Revit.Application.Document.ActiveView",
+      "Id": "8d0769b2ca67400ab7735216f2f0ebd7",
+      "Inputs": [
+        {
+          "Id": "d97fceb24e9d47e2983b202430ee97ba",
+          "Name": "document",
+          "Description": "Revit.Application.Document",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "2cd249bf12244f5496cf0526b33301ea",
+          "Name": "View",
+          "Description": "View",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Get the active view for the document\n\nDocument.ActiveView: View"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "21a733f65578460197738af3b3650608",
+      "Inputs": [
+        {
+          "Id": "f6f3d1db5d4b415da0cd817b2a66fab3",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "82c6e990781045d1af4a657ad61e1cd8",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualize the node's output"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "0e448bb4257c4a1c8d19831ec42b2db4",
+      "End": "f6f3d1db5d4b415da0cd817b2a66fab3",
+      "Id": "3191de5e328f408d90c01aa49dca2d54",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "ee45952a4b424b579c419a17b669f413",
+      "End": "e7e4ac865171417185545532d6ea99f7",
+      "Id": "7854f851e1364b7cbea4c3f89e67136c",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "6fdc4eefae5a45b59c3f5d09afad720d",
+      "End": "78d34e391fe741a0a3832ffedb0eebc1",
+      "Id": "61c863be054a413b97c569b25755320d",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "69cfa6ca672a4a75a4728f77ecef52b8",
+      "End": "d97fceb24e9d47e2983b202430ee97ba",
+      "Id": "b5d54831e2d9468b919332eb64451fa0",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "2cd249bf12244f5496cf0526b33301ea",
+      "End": "4ff790e8c22349689a7b2fd6541b5be3",
+      "Id": "a0e8e3dd7a3449f9b870908e3ffba6de",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [
+    "98c956a4-8e90-46b7-ad56-e4743adfcbaf"
+  ],
+  "NodeLibraryDependencies": [
+    {
+      "Name": "ElementsCropView",
+      "Version": "0.0.1",
+      "ReferenceType": "Package",
+      "Nodes": [
+        "a3b7cd6cf62a42bfb880957a078d3fe3"
+      ]
+    }
+  ],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "2.13",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.13.1.3887",
+      "RunType": "Automatic",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Name": "ElementsCropView",
+        "ShowGeometry": true,
+        "Id": "a3b7cd6cf62a42bfb880957a078d3fe3",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 595.44303906751577,
+        "Y": 317.0
+      },
+      {
+        "Name": "Code Block",
+        "ShowGeometry": true,
+        "Id": "af78b5033f584d2085b449c5b6dc26a0",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 331.286491263289,
+        "Y": 578.591482844656
+      },
+      {
+        "Name": "Select Model Element",
+        "ShowGeometry": true,
+        "Id": "557ab2a7f86f4b588a437696c1ef54e0",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 213.27295328156225,
+        "Y": 361.43262574777873
+      },
+      {
+        "Name": "Document.Current",
+        "ShowGeometry": true,
+        "Id": "18a5827abf344282806a585c1a285b1c",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 55.000000000000114,
+        "Y": 85.0
+      },
+      {
+        "Name": "Document.ActiveView",
+        "ShowGeometry": true,
+        "Id": "8d0769b2ca67400ab7735216f2f0ebd7",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 347.13661247285813,
+        "Y": 93.515462330136074
+      },
+      {
+        "Name": "Watch",
+        "ShowGeometry": true,
+        "Id": "21a733f65578460197738af3b3650608",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 898.86865744398426,
+        "Y": 269.450568508409
+      }
+    ],
+    "Annotations": [],
+    "X": -75.445319259144981,
+    "Y": 34.408205874142226,
+    "Zoom": 0.91006380393143926
+  }
+}

@@ -1,0 +1,552 @@
+{
+  "Uuid": "7bc36ab5-7ed9-4156-8ac1-09c73f4291ef",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "Room Cropbox",
+  "ElementResolver": {
+    "ResolutionMap": {
+      "Autodesk.Point": {
+        "Key": "Autodesk.DesignScript.Geometry.Point",
+        "Value": "ProtoGeometry.dll"
+      },
+      "Autodesk.DesignScript.Geometry.Point": {
+        "Key": "Autodesk.DesignScript.Geometry.Point",
+        "Value": "ProtoGeometry.dll"
+      },
+      "BoundingBox": {
+        "Key": "Autodesk.DesignScript.Geometry.BoundingBox",
+        "Value": "ProtoGeometry.dll"
+      },
+      "Autodesk.Geometry.Poin": {
+        "Key": "Autodesk.DesignScript.Geometry.Geometry",
+        "Value": "ProtoGeometry.dll"
+      },
+      "Autodesk.Geometry": {
+        "Key": "Autodesk.DesignScript.Geometry.Geometry",
+        "Value": "ProtoGeometry.dll"
+      },
+      "Autodesk.DesignScript.Geometry.Geometry.Poin": {
+        "Key": "Autodesk.DesignScript.Geometry.Geometry",
+        "Value": "ProtoGeometry.dll"
+      },
+      "CoordinateSystem": {
+        "Key": "Autodesk.DesignScript.Geometry.CoordinateSystem",
+        "Value": "ProtoGeometry.dll"
+      }
+    }
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Revit.Application.Document.ActiveView",
+      "Id": "6a651d22539f4835809f265ecc6c8e05",
+      "Inputs": [
+        {
+          "Id": "b997e8e8b0ab4b48bb9ea32ef1524d6d",
+          "Name": "document",
+          "Description": "Revit.Application.Document",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "8fef7852ef9b46ff96771b48e5ccc66e",
+          "Name": "View",
+          "Description": "View",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Get the active view for the document\n\nDocument.ActiveView: View"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Revit.Application.Document.Current",
+      "Id": "cab034382e4941c19508fe9196e58377",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "4bf624ce8b614a10b74208b9a07d8ab5",
+          "Name": "Document",
+          "Description": "Document",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Get the current document\n\nDocument.Current: Document"
+    },
+    {
+      "ConcreteType": "Dynamo.Nodes.DSModelElementSelection, DSRevitNodesUI",
+      "NodeType": "ExtensionNode",
+      "InstanceId": [
+        "bba92d85-a735-4273-bac4-a2038a6502bf-000c8787"
+      ],
+      "Id": "d7aba7247eff4e408b883068b0bcb225",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "a913edc025e74af9aa713b34f2b48ce1",
+          "Name": "Element",
+          "Description": "The selected elements.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Revit.Elements.Views.View.SetCropBox@Autodesk.DesignScript.Geometry.BoundingBox",
+      "Id": "7ef9af3c0d29417cbd65c2ab377cdd81",
+      "Inputs": [
+        {
+          "Id": "fb493cfde5d34691b3fcbd34e6c6fa93",
+          "Name": "view",
+          "Description": "Revit.Elements.Views.View",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "2b9fbb26bf034365a280d33330df97fb",
+          "Name": "boundingBox",
+          "Description": "BoundingBox",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "331c6b2c8f744866bc9f75a441d7c0e3",
+          "Name": "View",
+          "Description": "View",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Set CropBox for a view.\n\nView.SetCropBox (boundingBox: BoundingBox): View"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Revit.Elements.Element.BoundingBox",
+      "Id": "de69730646ef4e7d894bf7bf70e91f77",
+      "Inputs": [
+        {
+          "Id": "4d93f35ff7024d6ea7225b689075f7c5",
+          "Name": "element",
+          "Description": "Revit.Elements.Element",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "8297cdc960014cba80efa1e0d42193b0",
+          "Name": "BoundingBox",
+          "Description": "BoundingBox",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Get an Axis-aligned BoundingBox of the Element\n\nElement.BoundingBox: BoundingBox"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Autodesk.DesignScript.Geometry.BoundingBox.ByCorners@Autodesk.DesignScript.Geometry.Point,Autodesk.DesignScript.Geometry.Point",
+      "Id": "d172dbf4c4fc41d48b904c72e34ea94a",
+      "Inputs": [
+        {
+          "Id": "0ff9500dac8048618ab2b69d27b95b9b",
+          "Name": "min",
+          "Description": "Point\nDefault value : Autodesk.DesignScript.Geometry.Point.ByCoordinates(0, 0, 0)",
+          "UsingDefaultValue": true,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "ea88a4dd4de3446c8555324b699f5188",
+          "Name": "max",
+          "Description": "Point\nDefault value : Autodesk.DesignScript.Geometry.Point.ByCoordinates(1, 1, 1)",
+          "UsingDefaultValue": true,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "d4e78d98c1bf440c8f48997a211fe153",
+          "Name": "BoundingBox",
+          "Description": "BoundingBox",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Creates the an axis-aligned BoundingBox spanning between the minimum Point and the maximum Point.\n\nBoundingBox.ByCorners (min: Point = Autodesk.DesignScript.Geometry.Point.ByCoordinates(0, 0, 0), max: Point = Autodesk.DesignScript.Geometry.Point.ByCoordinates(1, 1, 1)): BoundingBox"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "box;\n\noffset = 2;\n\nmin_point = BoundingBox.MinPoint(box);\nmax_point = BoundingBox.MaxPoint(box);",
+      "Id": "c4d2808a24d843f58777f884d2e46c04",
+      "Inputs": [
+        {
+          "Id": "494d9ce19acd46899747c8c04d8ad2f1",
+          "Name": "box",
+          "Description": "box",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "622e6c765e784cd3adf32b7b07553892",
+          "Name": "",
+          "Description": "Value of expression at line 1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "6a99814e252b4ffab7e9dab9d719986f",
+          "Name": "",
+          "Description": "offset",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "0e5690c726894e5a93d10d7a8ee7bad5",
+          "Name": "",
+          "Description": "min_point",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "89891e78b682403da22db358b2d167e0",
+          "Name": "",
+          "Description": "max_point",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows for DesignScript code to be authored directly"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Dimension\r\nfrom Autodesk.Revit.DB import Point\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n\r\ndef inc(value, increment):\r\n    if value == 0:\r\n        return increment\r\n    else:\r\n        return value + (increment if value > 0 else -increment)\r\n\r\n\r\nbox = IN[0]\r\nmp = box.MinPoint\r\noffset = 10\r\n\r\nnew_x = inc(mp.X, offset)\r\nnew_y = inc(mp.Y, offset)\r\nnew_z = inc(mp.Z, offset)\r\n\r\nx = Point.Create(XYZ(new_x, new_y, new_z));\r\n\r\nprint(mp.X)\r\n\r\n\r\nOUT = output.getvalue()\r\n",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "b4320c9de6f34c9eaaf804e6e2c54d30",
+      "Inputs": [
+        {
+          "Id": "05ed5a00d20947a98219f82ceb5c0292",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "584d26b18baa4ac8b25f4f28b0292717",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "362c45cf0b954019b11c7d1080f0a8f5",
+      "Inputs": [
+        {
+          "Id": "354cc8f7aad84fb28a9efcfdf8c47f02",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "f3883001e20c4e61a4431fdfaa9cf3b9",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualize the node's output"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "point1 = Autodesk.Point.ByCartesianCoordinates(CoordinateSystem.ByOrigin(0, 0, 0), 0, 0, 0);",
+      "Id": "24df715015064d7883f92ac32c070b07",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "e1712f4ee1d64b85a0056db07b0e78f3",
+          "Name": "",
+          "Description": "point1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows for DesignScript code to be authored directly"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "8fef7852ef9b46ff96771b48e5ccc66e",
+      "End": "fb493cfde5d34691b3fcbd34e6c6fa93",
+      "Id": "c17c9011002543e9afb5e5708fd5d48f",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "4bf624ce8b614a10b74208b9a07d8ab5",
+      "End": "b997e8e8b0ab4b48bb9ea32ef1524d6d",
+      "Id": "eb2a076e751b43f9b47ebd7467a7a800",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "a913edc025e74af9aa713b34f2b48ce1",
+      "End": "4d93f35ff7024d6ea7225b689075f7c5",
+      "Id": "9d501c616902456f89e9cd427d112891",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "8297cdc960014cba80efa1e0d42193b0",
+      "End": "2b9fbb26bf034365a280d33330df97fb",
+      "Id": "d96dac023cdd416b8cf29915a9cf6329",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "8297cdc960014cba80efa1e0d42193b0",
+      "End": "494d9ce19acd46899747c8c04d8ad2f1",
+      "Id": "089f65a6334c45a184da7a6081bc5342",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "622e6c765e784cd3adf32b7b07553892",
+      "End": "05ed5a00d20947a98219f82ceb5c0292",
+      "Id": "7abe5ce0e5f340a1a5af74c72aa9e9e7",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "584d26b18baa4ac8b25f4f28b0292717",
+      "End": "354cc8f7aad84fb28a9efcfdf8c47f02",
+      "Id": "190a3569d451446f9a609b5a6fcc069d",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "2.13",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.13.1.3887",
+      "RunType": "Automatic",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Background Preview",
+      "EyeX": 22.186197280883789,
+      "EyeY": 22.4394588470459,
+      "EyeZ": 35.017929077148438,
+      "LookX": -18.878580093383789,
+      "LookY": -17.659749984741211,
+      "LookZ": -29.281803131103516,
+      "UpX": -0.13567169010639191,
+      "UpY": 0.96814769506454468,
+      "UpZ": -0.21043559908866882
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Name": "Document.ActiveView",
+        "ShowGeometry": true,
+        "Id": "6a651d22539f4835809f265ecc6c8e05",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1202.6389841945943,
+        "Y": 933.04727867261522
+      },
+      {
+        "Name": "Document.Current",
+        "ShowGeometry": true,
+        "Id": "cab034382e4941c19508fe9196e58377",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 944.64880296370734,
+        "Y": 907.93539439419726
+      },
+      {
+        "Name": "Select Model Element",
+        "ShowGeometry": true,
+        "Id": "d7aba7247eff4e408b883068b0bcb225",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -259.216381688139,
+        "Y": 1029.9843515431078
+      },
+      {
+        "Name": "View.SetCropBox",
+        "ShowGeometry": true,
+        "Id": "7ef9af3c0d29417cbd65c2ab377cdd81",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1663.3498141563316,
+        "Y": 1040.4568969655206
+      },
+      {
+        "Name": "Element.BoundingBox",
+        "ShowGeometry": true,
+        "Id": "de69730646ef4e7d894bf7bf70e91f77",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 64.091136043209531,
+        "Y": 1047.6627355923258
+      },
+      {
+        "Name": "BoundingBox.ByCorners",
+        "ShowGeometry": true,
+        "Id": "d172dbf4c4fc41d48b904c72e34ea94a",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1287.0073804527626,
+        "Y": 1155.8497623324054
+      },
+      {
+        "Name": "Code Block",
+        "ShowGeometry": true,
+        "Id": "c4d2808a24d843f58777f884d2e46c04",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 104.26905953962284,
+        "Y": 1287.4535449589064
+      },
+      {
+        "Name": "Python Script",
+        "ShowGeometry": true,
+        "Id": "b4320c9de6f34c9eaaf804e6e2c54d30",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 582.79385461923164,
+        "Y": 1177.8897472909948
+      },
+      {
+        "Name": "Watch",
+        "ShowGeometry": true,
+        "Id": "362c45cf0b954019b11c7d1080f0a8f5",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 839.03901983732362,
+        "Y": 1217.43822497239
+      },
+      {
+        "Name": "Code Block",
+        "ShowGeometry": true,
+        "Id": "24df715015064d7883f92ac32c070b07",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -524.87151929670267,
+        "Y": 1457.7629424466902
+      }
+    ],
+    "Annotations": [],
+    "X": 407.35758800026883,
+    "Y": -26.345815627615764,
+    "Zoom": 0.31229775753760469
+  }
+}

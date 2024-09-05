@@ -1,0 +1,319 @@
+{
+  "Uuid": "f934dc57-dee7-4580-bbbf-534573cb3724",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "Center Format",
+  "ElementResolver": {
+    "ResolutionMap": {
+      "DateTime.Now": {
+        "Key": "DSCore.DateTime",
+        "Value": "DSCoreNodes.dll"
+      },
+      "Dimensions": {
+        "Key": "Rhythm.Revit.Elements.Dimensions",
+        "Value": "RhythmRevit.dll"
+      }
+    }
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "7c1978e629cd426ba4326518fc5575b8",
+      "Inputs": [
+        {
+          "Id": "0fe06a2cace74713b3aa27dc22d2727e",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "1336769ec0a141b4ba20247d1386fa77",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualize the node's output"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Dimension\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\ntime = IN[1]\r\n\r\n# Import model  \r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n\r\ndef calculate_angle(x1, y1, x2, y2):\r\n    # Calculate the differences\r\n    delta_x = x2 - x1\r\n    delta_y = y2 - y1\r\n    \r\n    # Compute the angle in radians\r\n    angle_radians = math.atan2(delta_y, delta_x)\r\n    \r\n    # Convert the angle to degrees\r\n    angle_degrees = angle_radians * (180 / math.pi)\r\n    \r\n    return angle_degrees\r\n\r\n\r\ndef create_incrementer(value, increment=0.05, threshold=10):\r\n\r\n    thresholds_crossed = value // threshold\r\n    \r\n    # Calculate the incremented value\r\n    incremented_value = thresholds_crossed * increment\r\n    \r\n    return incremented_value\r\n\r\n\r\ndef check_dim_dir(dimension, dim_curve_segment):\r\n    dim_curve = 0\r\n    if dim_curve_segment:\r\n        dim_curve = dim_curve_segment\r\n    else:\r\n        dim_curve = dimension.Curve\r\n    dir = [float(a.strip()) for a in str(dim_curve.Direction).strip().replace(\"(\", \"\").replace(\")\", \"\").split(\",\")]\r\n\r\n\r\n\r\n    if dir[0] == 1 and dir[1] == 0 and dir[2] == 0:\r\n        return {\"dir\": \"horizontal\", \"val\": dir}\r\n    elif dir[0] == 0 and (dir[1] == -1 or dir[1] == 1) and dir[2] == 0:\r\n        return {\"dir\": \"vertical\", \"val\": dir}\r\n    \r\n    angle = calculate_angle(dir[0], dir[1], 0, 0)\r\n    new_Angle = round(angle) if angle < 180 and angle >=0 else round(abs(abs(angle) - 180))\r\n\r\n    if new_Angle > 90:\r\n        return {\"dir\": \"angled-op\", \"val\": dir, \"angle\": new_Angle}\r\n    return {\"dir\": \"angled\", \"val\": dir, \"angle\": new_Angle}\r\n\r\n\r\ndef modify(model, dim_curve=None):\r\n    res = check_dim_dir(model, dim_curve)\r\n\r\n    a = model.Origin\r\n    hori = -1\r\n    vert = 0.8\r\n    angl = -1.5\r\n    if res[\"dir\"] == \"horizontal\":\r\n        model.TextPosition = XYZ(a.X, a.Y + hori, a.Z)\r\n    elif res[\"dir\"] == \"vertical\":\r\n        model.TextPosition = XYZ(a.X + vert, a.Y, a.Z)\r\n    elif res[\"dir\"] == \"angled\":\r\n        inc = create_incrementer(res[\"angle\"], 0.1)\r\n\r\n        model.TextPosition = XYZ(a.X + (res[\"val\"][1]),\r\n                                 a.Y + angl + inc + (res[\"val\"][1]),\r\n                                 a.Z)\r\n        print(\"inc: \", inc)\r\n    elif res[\"dir\"] == \"angled-op\":\r\n        inc = create_incrementer(res[\"angle\"], 0.1)\r\n        model.TextPosition = XYZ(a.X + (res[\"val\"][1]),\r\n                                 a.Y - angl -inc + (res[\"val\"][1]),\r\n                                 a.Z)\r\n        \r\n        print(\"inc: \", inc)\r\n\r\n@transaction\r\ndef reset(model):\r\n    size = model.Segments.Size\r\n    if size == 0:\r\n        try:\r\n            model.ResetTextPosition()\r\n        except:\r\n            pass\r\n    else:\r\n        for i in range(0, size):\r\n            dim = model.Segments[i]\r\n            dim.ResetTextPosition()\r\n\r\n\r\n@transaction\r\ndef start(model):\r\n    size = model.Segments.Size\r\n    if size == 0:\r\n        modify(model)\r\n    else:\r\n        dim_curve = model.Curve\r\n        for i in range(0, size):\r\n            dim = model.Segments[i]\r\n            modify(dim, dim_curve)\r\n\r\n\r\n# collector = FilteredElementCollector(doc).OfClass(Dimension)\r\n# models = list(collector)\r\n\r\nres = True\r\nres = False\r\n\r\n\r\nmodels = UnwrapElement(IN[0])\r\nif isinstance(models, list):\r\n    dimensions = [elem for elem in models if isinstance(elem, Dimension)]\r\n    for model in dimensions:\r\n        if res:\r\n            reset(model)\r\n        else:\r\n            start(model)\r\nelse:\r\n    if res:\r\n        reset(models)\r\n    else:\r\n        start(models)\r\n\r\n\r\nOUT = output.getvalue()\r\n",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "c665e3aa1d354283823c5f92c780d56b",
+      "Inputs": [
+        {
+          "Id": "dedb84cdb8c44d659e0b537c859cda8c",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "1feff6b1e10f48ce87a248c4f9fb232b",
+          "Name": "IN[1]",
+          "Description": "Input #1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "aa4fecab34f3469cbe4523deba2fd3f2",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "Dynamo.Nodes.DSModelElementsSelection, DSRevitNodesUI",
+      "NodeType": "ExtensionNode",
+      "InstanceId": [
+        "a96beeb4-2923-4e01-8a35-59da86fdb45f-003e2320"
+      ],
+      "Id": "f2888cdff4264f6aa4645d8b469543da",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "943e3d9056584a51a65c9aff045a6fc2",
+          "Name": "Elements",
+          "Description": "The selected elements.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "currentDateTime = DateTime.Now;",
+      "Id": "7f2497bbf7f24d95a9cff6b18d0d87a0",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "bc716c443f7140a6a4f6e401f1656075",
+          "Name": "",
+          "Description": "currentDateTime",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows for DesignScript code to be authored directly"
+    },
+    {
+      "ConcreteType": "Dynamo.Nodes.DSModelElementSelection, DSRevitNodesUI",
+      "NodeType": "ExtensionNode",
+      "InstanceId": [
+        "a96beeb4-2923-4e01-8a35-59da86fdb45f-003e2320"
+      ],
+      "Id": "03a27852fb914b469c388a8d35431b57",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "13152af4449e49d690c017aba3e553f2",
+          "Name": "Element",
+          "Description": "The selected elements.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "t2 = Dimensions.CenterTextOnLine(t1);",
+      "Id": "986864ed3bac4e52abee27595fc68547",
+      "Inputs": [
+        {
+          "Id": "4c85dfdfa8444710acf92603b60e41eb",
+          "Name": "t1",
+          "Description": "t1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "d6ce059dafd64495b0400b0b3a2b71f9",
+          "Name": "",
+          "Description": "t2",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows for DesignScript code to be authored directly"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "aa4fecab34f3469cbe4523deba2fd3f2",
+      "End": "0fe06a2cace74713b3aa27dc22d2727e",
+      "Id": "7700c0b68fea4562b650b245323d5c9b",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "943e3d9056584a51a65c9aff045a6fc2",
+      "End": "dedb84cdb8c44d659e0b537c859cda8c",
+      "Id": "f43a6eef783f4aaba673808deabac465",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "bc716c443f7140a6a4f6e401f1656075",
+      "End": "1feff6b1e10f48ce87a248c4f9fb232b",
+      "Id": "7c89735bcf7646c0b34a484de0fe629e",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "13152af4449e49d690c017aba3e553f2",
+      "End": "4c85dfdfa8444710acf92603b60e41eb",
+      "Id": "50a1dc0b8083497e8f775fe3d613f775",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "2.13",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.13.1.3887",
+      "RunType": "Automatic",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0000114440918,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0000114440918,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Name": "Watch",
+        "ShowGeometry": true,
+        "Id": "7c1978e629cd426ba4326518fc5575b8",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 418.81783662685052,
+        "Y": 299.14969534231392
+      },
+      {
+        "Name": "Python Script",
+        "ShowGeometry": true,
+        "Id": "c665e3aa1d354283823c5f92c780d56b",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 424.72963817491456,
+        "Y": 141.97818714317953
+      },
+      {
+        "Name": "Select Model Elements",
+        "ShowGeometry": true,
+        "Id": "f2888cdff4264f6aa4645d8b469543da",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 384.6782915542376,
+        "Y": -172.60381359989188
+      },
+      {
+        "Name": "Code Block",
+        "ShowGeometry": true,
+        "Id": "7f2497bbf7f24d95a9cff6b18d0d87a0",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 34.359395337699254,
+        "Y": 422.7231489582698
+      },
+      {
+        "Name": "Select Model Element",
+        "ShowGeometry": true,
+        "Id": "03a27852fb914b469c388a8d35431b57",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -191.76879418381014,
+        "Y": -65.357193697172136
+      },
+      {
+        "Name": "Code Block",
+        "ShowGeometry": true,
+        "Id": "986864ed3bac4e52abee27595fc68547",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -171.57114986495947,
+        "Y": 149.60450299652928
+      }
+    ],
+    "Annotations": [],
+    "X": 379.60382591182054,
+    "Y": 234.78815852989851,
+    "Zoom": 0.843681821774245
+  }
+}

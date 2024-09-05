@@ -1,0 +1,407 @@
+{
+  "Uuid": "7bc36ab5-7ed9-4156-8ac1-09c73f4291ef",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "Room Cropbox",
+  "ElementResolver": {
+    "ResolutionMap": {
+      "Autodesk.Point": {
+        "Key": "Autodesk.DesignScript.Geometry.Point",
+        "Value": "ProtoGeometry.dll"
+      },
+      "Autodesk.DesignScript.Geometry.Point": {
+        "Key": "Autodesk.DesignScript.Geometry.Point",
+        "Value": "ProtoGeometry.dll"
+      },
+      "BoundingBox": {
+        "Key": "Autodesk.DesignScript.Geometry.BoundingBox",
+        "Value": "ProtoGeometry.dll"
+      },
+      "Autodesk.Geometry.Poin": {
+        "Key": "Autodesk.DesignScript.Geometry.Geometry",
+        "Value": "ProtoGeometry.dll"
+      },
+      "Autodesk.Geometry": {
+        "Key": "Autodesk.DesignScript.Geometry.Geometry",
+        "Value": "ProtoGeometry.dll"
+      },
+      "Autodesk.DesignScript.Geometry.Geometry.Poin": {
+        "Key": "Autodesk.DesignScript.Geometry.Geometry",
+        "Value": "ProtoGeometry.dll"
+      },
+      "CoordinateSystem": {
+        "Key": "Autodesk.DesignScript.Geometry.CoordinateSystem",
+        "Value": "ProtoGeometry.dll"
+      }
+    }
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "Dynamo.Nodes.DSModelElementSelection, DSRevitNodesUI",
+      "NodeType": "ExtensionNode",
+      "InstanceId": [
+        "bba92d85-a735-4273-bac4-a2038a6502bf-000c8787"
+      ],
+      "Id": "d7aba7247eff4e408b883068b0bcb225",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "a913edc025e74af9aa713b34f2b48ce1",
+          "Name": "Element",
+          "Description": "The selected elements.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "919599fa50f2422b94871da495b510bd",
+      "Inputs": [
+        {
+          "Id": "5de5a7eb8e13463ba79f4ba646bbf543",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "aebd0889e591485ebc88f85a10bcd287",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualize the node's output"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Revit.Application.Document.Current",
+      "Id": "7d70292ab85c472e841c301a733ffcfe",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "c90f278b07134c65b7ed0d992f6c10f1",
+          "Name": "Document",
+          "Description": "Document",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Get the current document\n\nDocument.Current: Document"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Revit.Application.Document.ActiveView",
+      "Id": "1ada5c5e989e43a690f670dbef32da2d",
+      "Inputs": [
+        {
+          "Id": "1bf39ff4402945b583b01622af212e23",
+          "Name": "document",
+          "Description": "Revit.Application.Document",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "2e1159efa14042beb4f418d06aaf2424",
+          "Name": "View",
+          "Description": "View",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Get the active view for the document\n\nDocument.ActiveView: View"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonStringNode, PythonNodeModels",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "NodeType": "ExtensionNode",
+      "Id": "00e57e90b5744fa59acc5aafcab7e3c5",
+      "Inputs": [
+        {
+          "Id": "1a0703a1b83b4418bee9250dea4d9729",
+          "Name": "script",
+          "Description": "Python script to run.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "414f3598ce9c423192cd5bd4702bd894",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "083e4aef61bd497096310eda0778340d",
+          "Name": "IN[1]",
+          "Description": "Input #1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "b52d71b45cda498ebea8aff91b906fb5",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs a Python script from a string."
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "DSCore.IO.FileSystem.ReadText@var",
+      "Id": "76a4510b48d443ee9a0be603dfb63fb4",
+      "Inputs": [
+        {
+          "Id": "34f5e5773922425eb30ccf37fa91d4f0",
+          "Name": "file",
+          "Description": "File object to read text from\n\nvar",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "15ee97f2e0bf40bf88a0f1c1e879e52b",
+          "Name": "string",
+          "Description": "Contents of the text file.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Reads a text file and returns the contents as a string.\n\nFileSystem.ReadText (file: var): string"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.Filename, CoreNodeModels",
+      "HintPath": "C:\\Users\\User\\Documents\\Dynamo Scripts\\Room Cropbox.py",
+      "InputValue": ".\\Room Cropbox.py",
+      "NodeType": "ExtensionNode",
+      "Id": "102e437e5e3e45178e0ab1caaf8a3865",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "b331e63d4ee74e1f81f4009b6f2190b3",
+          "Name": "",
+          "Description": "File Path",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows you to select a file on the system to get its file path."
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "a913edc025e74af9aa713b34f2b48ce1",
+      "End": "083e4aef61bd497096310eda0778340d",
+      "Id": "ebd819a63a7242f5be591c2530d4cd2d",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "c90f278b07134c65b7ed0d992f6c10f1",
+      "End": "1bf39ff4402945b583b01622af212e23",
+      "Id": "0cf0d9073d564e73b9401d82b2c212e7",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "2e1159efa14042beb4f418d06aaf2424",
+      "End": "414f3598ce9c423192cd5bd4702bd894",
+      "Id": "5187c73f989749f6b2905ef2f2973ea9",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "b52d71b45cda498ebea8aff91b906fb5",
+      "End": "5de5a7eb8e13463ba79f4ba646bbf543",
+      "Id": "c35a5e8b4fd54044abada1251d6286a4",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "15ee97f2e0bf40bf88a0f1c1e879e52b",
+      "End": "1a0703a1b83b4418bee9250dea4d9729",
+      "Id": "fdf3a76c25cf4f6a8f2fcd9a8267db88",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "b331e63d4ee74e1f81f4009b6f2190b3",
+      "End": "34f5e5773922425eb30ccf37fa91d4f0",
+      "Id": "796e43a897d241ad90f25e753aeaefac",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [
+    {
+      "Name": "Room Cropbox.py",
+      "ReferenceType": "External",
+      "Nodes": [
+        "102e437e5e3e45178e0ab1caaf8a3865"
+      ]
+    }
+  ],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "2.13",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.13.1.3887",
+      "RunType": "Automatic",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Background Preview",
+      "EyeX": 22.186197280883789,
+      "EyeY": 22.4394588470459,
+      "EyeZ": 35.017929077148438,
+      "LookX": -18.878580093383789,
+      "LookY": -17.659749984741211,
+      "LookZ": -29.281803131103516,
+      "UpX": -0.13567169010639191,
+      "UpY": 0.96814769506454468,
+      "UpZ": -0.21043559908866882
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Name": "Select Model Element",
+        "ShowGeometry": true,
+        "Id": "d7aba7247eff4e408b883068b0bcb225",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -418.122512224613,
+        "Y": 967.190825551597
+      },
+      {
+        "Name": "Watch",
+        "ShowGeometry": true,
+        "Id": "919599fa50f2422b94871da495b510bd",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 233.67577010476055,
+        "Y": 984.40600394422813
+      },
+      {
+        "Name": "Document.Current",
+        "ShowGeometry": true,
+        "Id": "7d70292ab85c472e841c301a733ffcfe",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -567.92022162021556,
+        "Y": 775.77875208841851
+      },
+      {
+        "Name": "Document.ActiveView",
+        "ShowGeometry": true,
+        "Id": "1ada5c5e989e43a690f670dbef32da2d",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -275.78360914735822,
+        "Y": 784.2942144185555
+      },
+      {
+        "Name": "Python Script From String",
+        "ShowGeometry": true,
+        "Id": "00e57e90b5744fa59acc5aafcab7e3c5",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 109.38637583054162,
+        "Y": 724.93010501239
+      },
+      {
+        "Name": "FileSystem.ReadText",
+        "ShowGeometry": true,
+        "Id": "76a4510b48d443ee9a0be603dfb63fb4",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -199.97098488395679,
+        "Y": 562.8467534879137
+      },
+      {
+        "Name": "File Path",
+        "ShowGeometry": true,
+        "Id": "102e437e5e3e45178e0ab1caaf8a3865",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -496.83137034396123,
+        "Y": 476.40440822812633
+      }
+    ],
+    "Annotations": [],
+    "X": 463.49410709419396,
+    "Y": 150.42581819371566,
+    "Zoom": 0.27492199088085989
+  }
+}

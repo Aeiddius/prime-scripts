@@ -1,0 +1,188 @@
+{
+  "Uuid": "2c7ba8f9-f617-4a94-b58c-01c94646ec5e",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "Center Complete",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "Dynamo.Nodes.DSModelElementSelection, DSRevitNodesUI",
+      "NodeType": "ExtensionNode",
+      "InstanceId": [
+        "c2911ba3-4f53-4d19-8a93-82d28e7fdd0f-0020cd0c"
+      ],
+      "Id": "086a55049523410c84dd06d4d3920a15",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "0ec3df0aecce4fb5a3d2afa43e705370",
+          "Name": "Element",
+          "Description": "The selected elements.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import CurveLoop, ElementId, Plane, BoundingBoxXYZ\r\nfrom Autodesk.Revit.DB import ViewPlan, CurveLoop\r\nfrom Autodesk.Revit.DB import DetailLine , XYZ\r\nfrom Autodesk.Revit.DB.Architecture import Room\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import ViewDuplicateOption, Line, ViewFamily\r\n\r\n\r\nclr.AddReference('RevitServices')\r\nclr.AddReference('RevitAPI')\r\nclr.AddReference('RevitNodes')\r\nclr.AddReference('RevitAPIUI')\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nuidoc = DocumentManager.Instance.CurrentUIApplication.ActiveUIDocument\r\n\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n\r\ndef print_member(obj):\r\n    for i in dir(obj):\r\n        print(i)\r\n\r\ndef get_midpoint(point1, point2):\r\n\r\n    # Calculate the midpoint coordinates\r\n    midpoint_x = (point1.X + point2.X) / 2\r\n    midpoint_y = (point1.Y + point2.Y) / 2\r\n    midpoint_z = (point1.Z + point2.Z) / 2\r\n    # Return a new XYZ point representing the midpoint\r\n    return XYZ(midpoint_x, midpoint_y, midpoint_z)\r\n\r\ndef midshit(xyz):\r\n     return XYZ(0, xyz.Normalize().Y, 0)\r\n\r\n@transaction\r\ndef start():\r\n    element = UnwrapElement(IN[0])\r\n    # element.TextPosition = element.Origin.Add(XYZ(0,-0.6,0))\r\n\r\n    size = element.Segments.Size\r\n\r\n    if size == 0:\r\n        element.TextPosition = element.Origin.Add(XYZ(0,-0.6,0))\r\n        # print(\"Single: \", model.ValueString)\r\n    else:\r\n        for i in range(0, size):\r\n            dim = element.Segments[i]\r\n            dim.TextPosition = dim.Origin.Add(XYZ(0,-0.6,0))\r\n\r\nstart()\r\n\r\nOUT = output.getvalue()\r\n\r\n\r\n",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "28fdb7e657b1496697641f2c482d669a",
+      "Inputs": [
+        {
+          "Id": "8e254dd0a67f40b89b6462aa8bf10e76",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "eb909d68e20e4752b06bc073a8699d6e",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "bd80731ab73a4ae987ddc384d613b349",
+      "Inputs": [
+        {
+          "Id": "d013856914044ae1bf7c18d2803f14b5",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "dac0c7fb71cd4150a83e64450d77c3bb",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualize the node's output"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "0ec3df0aecce4fb5a3d2afa43e705370",
+      "End": "8e254dd0a67f40b89b6462aa8bf10e76",
+      "Id": "5ef88141f6c3430ea6b7f02069d8a31d",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "eb909d68e20e4752b06bc073a8699d6e",
+      "End": "d013856914044ae1bf7c18d2803f14b5",
+      "Id": "f49c68d863df4912b037176db9781f8e",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "2.13",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.13.1.3887",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Name": "Select Model Element",
+        "ShowGeometry": true,
+        "Id": "086a55049523410c84dd06d4d3920a15",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 166.0,
+        "Y": 343.5
+      },
+      {
+        "Name": "Python Script",
+        "ShowGeometry": true,
+        "Id": "28fdb7e657b1496697641f2c482d669a",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 470.0,
+        "Y": 351.5
+      },
+      {
+        "Name": "Watch",
+        "ShowGeometry": true,
+        "Id": "bd80731ab73a4ae987ddc384d613b349",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 668.15791883028,
+        "Y": 474.0530559660196
+      }
+    ],
+    "Annotations": [],
+    "X": -139.58506512830098,
+    "Y": -65.175229906282766,
+    "Zoom": 0.95404292488281262
+  }
+}

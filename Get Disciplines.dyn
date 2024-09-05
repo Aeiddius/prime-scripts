@@ -1,0 +1,151 @@
+{
+  "Uuid": "3e3d3f42-01e2-4ffc-964e-4ddfac0290b5",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "Get Disciplines",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import clr\r\n\r\n# Import Revit API DLLs\r\nclr.AddReference('RevitAPI')\r\nclr.AddReference('RevitServices')\r\n\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, ViewPlan\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom collections import OrderedDict\r\n\r\n# Get the current Revit document\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\n# Create a collector to get all views in the project\r\nviews_collector = FilteredElementCollector(doc).OfClass(ViewPlan)\r\n\r\n# Initialize a set to hold unique disciplines\r\ndisciplines = []\r\n\r\n# Iterate through all views and collect disciplines\r\nfor view in views_collector:\r\n\r\n    disciplines.append(view.Discipline)\r\n\r\n# Convert disciplines from Revit API enumerations to string\r\ndiscipline_names = [discipline for discipline in disciplines]\r\nmylist = OrderedDict((x, True) for x in discipline_names).keys()\r\n# Output the list of disciplines\r\nOUT = mylist\r\n",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "26d5c9a43b84491a9276ff3bb170d9e3",
+      "Inputs": [
+        {
+          "Id": "ebbe6eaeac10483580372d565cc2414b",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "720d84321aa147f383f28ddf66db31f6",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "c1aa73f2580f49218e54bb378b507d4b",
+      "Inputs": [
+        {
+          "Id": "6d9fd3e0961d4100b93a2a4163e5a29a",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "77bec0827b9d48ce9ad600682c276135",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualize the node's output"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "720d84321aa147f383f28ddf66db31f6",
+      "End": "6d9fd3e0961d4100b93a2a4163e5a29a",
+      "Id": "9d5741503f7341e2a5e0a2e68601c0f9",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "2.13",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.13.1.3887",
+      "RunType": "Automatic",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Name": "Python Script",
+        "ShowGeometry": true,
+        "Id": "26d5c9a43b84491a9276ff3bb170d9e3",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 372.0,
+        "Y": 209.0
+      },
+      {
+        "Name": "Watch",
+        "ShowGeometry": true,
+        "Id": "c1aa73f2580f49218e54bb378b507d4b",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 665.0,
+        "Y": 239.0
+      }
+    ],
+    "Annotations": [],
+    "X": 0.0,
+    "Y": 0.0,
+    "Zoom": 1.0
+  }
+}

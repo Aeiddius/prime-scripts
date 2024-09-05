@@ -1,0 +1,258 @@
+{
+  "Uuid": "f934dc57-dee7-4580-bbbf-534573cb3724",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "Dimension Format - Single",
+  "ElementResolver": {
+    "ResolutionMap": {
+      "Dimension": {
+        "Key": "Revit.Elements.Dimension",
+        "Value": "RevitNodes.dll"
+      }
+    }
+  },
+  "Inputs": [],
+  "Outputs": [
+    {
+      "Id": "82d749911bb047eb8b57b0e916b6dd1b",
+      "Name": "Python Script",
+      "Type": "string",
+      "InitialValue": "",
+      "Description": "Runs an embedded Python script."
+    }
+  ],
+  "Nodes": [
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "561824324475417ebbac8641fa65984b",
+      "Inputs": [
+        {
+          "Id": "c5d1de8b5b454c5b87833398e0c5f4d4",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "3b6efe6633274a1da3672e93be6adb8c",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualize the node's output"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "numerator = {\r\n  \"0\" : \"⁰\",\r\n  \"1\" : \"¹\",\r\n  \"2\" : \"²\",\r\n  \"3\" : \"³\",\r\n  \"4\" : \"⁴\",\r\n  \"5\" : \"⁵\",\r\n  \"6\" : \"⁶\",\r\n  \"7\" : \"⁷\",\r\n  \"8\" : \"⁸\",\r\n  \"9\" : \"⁹\",\r\n}\r\n\r\ndenominator = {\r\n  \"0\" : \"₀\",\r\n  \"1\" : \"₁\",\r\n  \"2\" : \"₂\",\r\n  \"3\" : \"₃\",\r\n  \"4\" : \"₄\",\r\n  \"5\" : \"₅\",\r\n  \"6\" : \"₆\",\r\n  \"7\" : \"₇\",\r\n  \"8\" : \"₈\",\r\n  \"9\" : \"₉\",\r\n}\r\n\r\nOUT = {'numerator': numerator, 'denominator': denominator}",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "878a63b48ca540d18e00ee76bc1f2d42",
+      "Inputs": [
+        {
+          "Id": "ef6a071b8ec04845891c962d958cd586",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "d02415e3551f44c79cffb5733f32dd69",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import clr\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Dimension\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\n\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\n# Import model\r\n# models = UnwrapElement(IN[0])        # Autodesk.Revit.DB.Dimension\r\n# modelRaw = IN[0]                    # Dimension\r\n\r\n# Import unicode tables\r\nnumerator = IN[1]['numerator']\r\ndenominator = IN[1]['denominator']\r\n\r\nmodel = UnwrapElement(IN[0])\r\n\r\n# Get doc variable\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\n\r\ndef transaction(func):\r\n    \"\"\"\r\n    Decorator to ensure that a Revit transaction is started and completed \r\n    around the execution of the given function.\r\n\r\n    Parameters:\r\n    func (function): The function to be wrapped within a transaction.\r\n    \r\n    Returns:\r\n    function: A wrapper function that executes the original function within a transaction.\r\n    \"\"\"\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n\r\n\r\ndef fraction_converter(inch_num: str, inch_denom: str):\r\n    \"\"\"\r\n    Converts inch fractions into a stacked unicode format using provided \r\n    numerator and denominator mappings.\r\n\r\n    Parameters:\r\n    inch_num (str): The numerator part of the inch fraction.\r\n    inch_denom (str): The denominator part of the inch fraction.\r\n    \r\n    Returns:\r\n    str: A string representing the fraction in stacked unicode format.\r\n    \"\"\"\r\n    res = {\"super\": \"\", \"subs\": \"\"}\r\n\r\n    for num in inch_num:\r\n        res[\"super\"] += numerator[num]\r\n\r\n    for denom in inch_denom:\r\n        res[\"subs\"] += denominator[denom]\r\n    \r\n    return f\"{res['super']}⁄{res['subs']}\"\r\n\r\n@transaction\r\ndef change_format(dimension: Autodesk.Revit.DB.Dimension, value_string: str):\r\n    \"\"\"\r\n    Formats the dimension's value string into a tighter and more visually appealing format.\r\n    Handles both whole numbers and fractions, converting fractions to a stacked unicode format.\r\n\r\n    Parameters:\r\n    dimension (Autodesk.Revit.DB.Dimension): The dimension element whose value will be formatted.\r\n    value_string (str): The original value string of the dimension to be formatted.\r\n    \r\n    Returns:\r\n    None\r\n    \"\"\"\r\n    divided = \"\"\r\n    try:\r\n        divided = value_string.split(\"-\")\r\n\r\n    except:\r\n        print(\"WEIRD: \", value_string, dimension)\r\n        return\r\n    feet = \"\"\r\n    inch = \"\"\r\n    try:\r\n        feet = divided[0].strip()\r\n        inch = divided[1].strip().split(\" \")\r\n    except:\r\n        print(value_string)\r\n        return\r\n    if len(inch) == 1:\r\n        value = f\"{feet}-{inch[0]}\"\r\n        set_override_value(dimension, \"\")\r\n        set_override_value(dimension, value)\r\n    else:\r\n        inchWhole = inch[0]\r\n        inchFrac = inch[1].replace(\"'\", '\"')\r\n\r\n        # Split the inch numerator and denominator into index 0 and 1\r\n        inchFracSplit = inchFrac.split(\"/\")\r\n\r\n        # Converts into fractional unicode format\r\n        fraction = fraction_converter(inchFracSplit[0], inchFracSplit[1][:-1])\r\n        \r\n        # Applies the value\r\n        value = f\"{feet}-{inchWhole}{fraction}\\\"\"\r\n        set_override_value(dimension, \"\")\r\n        set_override_value(dimension, value)\r\n        \r\ndef set_override_value(dimension: Autodesk.Revit.DB.Dimension, new_value: str):\r\n    \"\"\"\r\n    Overrides the value of a dimension element with a new value.\r\n\r\n    Parameters:\r\n    dimension (Autodesk.Revit.DB.Dimension): The dimension element whose value will be overridden.\r\n    new_value (str): The new value to override the dimension with.\r\n    \r\n    Returns:\r\n    None\r\n    \"\"\"\r\n    dimension.ValueOverride = new_value\r\n    \r\n\r\ndef start(model: Autodesk.Revit.DB.Dimension):\r\n    \"\"\"\r\n    Applies formatting to the dimension values in a Revit model. If the dimension\r\n    is segmented, the formatting is applied to each segment individually.\r\n\r\n    Parameters:\r\n    model (Autodesk.Revit.DB.Dimension): The dimension element or model to be formatted.\r\n    \r\n    Returns:\r\n    None\r\n    \"\"\"\r\n    size = model.Segments.Size\r\n\r\n    if size == 0:\r\n        change_format(model, model.ValueString)\r\n        # print(\"Single: \", model.ValueString)\r\n    else:\r\n        for i in range(0, size):\r\n            dim = model.Segments[i]\r\n            change_format(dim, dim.ValueString)\r\n            print(dim.ValueString)\r\n            # print(\"Segmented: \", dim.ValueString)\r\n\r\n\r\n            \r\nstart(model)\r\n\r\nOUT = output.getvalue()\r\n",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "82d749911bb047eb8b57b0e916b6dd1b",
+      "Inputs": [
+        {
+          "Id": "31151d307a0f4a7b88ecf2789b7a3c3b",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "4f9efcecf1944e40950c68f6944a821f",
+          "Name": "IN[1]",
+          "Description": "Input #1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "e885ea3fffb545129119e44f3b05a3a0",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "Dynamo.Nodes.DSModelElementSelection, DSRevitNodesUI",
+      "NodeType": "ExtensionNode",
+      "InstanceId": [
+        "0b9d9c89-8f01-4a7f-8341-313df9fb6d55-0032e59a"
+      ],
+      "Id": "dbf497d5ab9a4179b0ee3e919707490d",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "61ede55bf272407798b6233b6e7774fa",
+          "Name": "Element",
+          "Description": "The selected elements.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "d02415e3551f44c79cffb5733f32dd69",
+      "End": "4f9efcecf1944e40950c68f6944a821f",
+      "Id": "8d5f97763dbf43beb9fa28e6991adc17",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "e885ea3fffb545129119e44f3b05a3a0",
+      "End": "c5d1de8b5b454c5b87833398e0c5f4d4",
+      "Id": "5bfa57e544fc482097e814321ccd78ac",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "61ede55bf272407798b6233b6e7774fa",
+      "End": "31151d307a0f4a7b88ecf2789b7a3c3b",
+      "Id": "8078847290c049459c02358a0f4fe01b",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "2.13",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.13.1.3887",
+      "RunType": "Automatic",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Name": "Watch",
+        "ShowGeometry": true,
+        "Id": "561824324475417ebbac8641fa65984b",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1184.2595311621922,
+        "Y": -324.89182797651983
+      },
+      {
+        "Name": "Table",
+        "ShowGeometry": true,
+        "Id": "878a63b48ca540d18e00ee76bc1f2d42",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 578.89767048875763,
+        "Y": -220.92958078597798
+      },
+      {
+        "Name": "Python Script",
+        "ShowGeometry": true,
+        "Id": "82d749911bb047eb8b57b0e916b6dd1b",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": true,
+        "Excluded": false,
+        "X": 848.96828802806556,
+        "Y": -340.25138376429305
+      },
+      {
+        "Name": "Select Model Element",
+        "ShowGeometry": true,
+        "Id": "dbf497d5ab9a4179b0ee3e919707490d",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 387.88831512649739,
+        "Y": -396.59483331388446
+      }
+    ],
+    "Annotations": [],
+    "X": -167.75209620008252,
+    "Y": 391.40290886651724,
+    "Zoom": 0.64903243119860821
+  }
+}

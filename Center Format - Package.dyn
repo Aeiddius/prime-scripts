@@ -1,0 +1,159 @@
+{
+  "Uuid": "f934dc57-dee7-4580-bbbf-534573cb3724",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "Center Format - Package",
+  "ElementResolver": {
+    "ResolutionMap": {
+      "DateTime.Now": {
+        "Key": "DSCore.DateTime",
+        "Value": "DSCoreNodes.dll"
+      },
+      "Dimensions": {
+        "Key": "Rhythm.Revit.Elements.Dimensions",
+        "Value": "RhythmRevit.dll"
+      }
+    }
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "Dynamo.Nodes.DSModelElementSelection, DSRevitNodesUI",
+      "NodeType": "ExtensionNode",
+      "InstanceId": [
+        "816b2aad-3288-4293-9cd3-11186983324f-003cda5d"
+      ],
+      "Id": "491c4a415d59452090684778d7db0480",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "0764f5c8450c4ee9b5ad5b6bb17ba39a",
+          "Name": "Element",
+          "Description": "The selected elements.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Rhythm.Revit.Elements.Dimensions.CenterTextOnLine@Revit.Elements.Dimension",
+      "Id": "e1cf0cb8c56b48e7b7172a0e78baa3e4",
+      "Inputs": [
+        {
+          "Id": "a37e4b7ac7ec4b6d8dfbe84488f7ec4f",
+          "Name": "dimension",
+          "Description": "The dimension to center text on line for.\n\nDimension",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "263bcc32fa5346319dc3e261be100658",
+          "Name": "dimension",
+          "Description": "The dimension.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "*BETA* This node will center the dimension's text on the line.\n\nDimensions.CenterTextOnLine (dimension: Dimension): void"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "0764f5c8450c4ee9b5ad5b6bb17ba39a",
+      "End": "a37e4b7ac7ec4b6d8dfbe84488f7ec4f",
+      "Id": "8033785b4fe947809603a847e63e98ee",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [
+    {
+      "Name": "Rhythm",
+      "Version": "2023.5.5",
+      "ReferenceType": "Package",
+      "Nodes": [
+        "e1cf0cb8c56b48e7b7172a0e78baa3e4"
+      ]
+    }
+  ],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "2.13",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.13.1.3887",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0000114440918,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0000114440918,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Name": "Select Model Element",
+        "ShowGeometry": true,
+        "Id": "491c4a415d59452090684778d7db0480",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -245.210296548582,
+        "Y": -244.45412665319509
+      },
+      {
+        "Name": "ʳʰʸᵗʰᵐ|Dimensions.CenterTextOnLine",
+        "ShowGeometry": true,
+        "Id": "e1cf0cb8c56b48e7b7172a0e78baa3e4",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 78.7238036552046,
+        "Y": -395.234025393657
+      }
+    ],
+    "Annotations": [],
+    "X": 362.55333524814108,
+    "Y": 402.27335104299181,
+    "Zoom": 1.2575632955793186
+  }
+}

@@ -1,0 +1,370 @@
+{
+  "Uuid": "f934dc57-dee7-4580-bbbf-534573cb3724",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "Complete Dimension Format",
+  "ElementResolver": {
+    "ResolutionMap": {
+      "Dimension": {
+        "Key": "Revit.Elements.Dimension",
+        "Value": "RevitNodes.dll"
+      }
+    }
+  },
+  "Inputs": [
+    {
+      "Id": "8225a87089c841d0813cf23afe3c9956",
+      "Name": "Select Model Element",
+      "Type": "hostSelection",
+      "Value": "6d75996c-0522-471a-8e39-8c039b7eeaa8-000466dc",
+      "Description": "Select a model element from the document.",
+      "SelectedIndex": 0
+    }
+  ],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "DSRevitNodesUI.ElementsOfCategory, DSRevitNodesUI",
+      "NodeType": "ExtensionNode",
+      "Id": "ba3eb0c901ad456280e867031eecc2ef",
+      "Inputs": [
+        {
+          "Id": "1fb9e03ee419482fafcc0e0eadb597de",
+          "Name": "Category",
+          "Description": "The Category",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "5b5e8794b0a641a18edf3d9cbd30d765",
+          "Name": "Elements",
+          "Description": "An element class.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Get all elements of the specified category from the model."
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Revit.Elements.Element.GetCategory",
+      "Id": "8cc6442a38ef4dc39204922fcc4f78b1",
+      "Inputs": [
+        {
+          "Id": "bd9898e6fa434046b20ed1bdc94d1820",
+          "Name": "element",
+          "Description": "Revit.Elements.Element",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "681c16b1128c4658968fc1f4b57f8e65",
+          "Name": "Category",
+          "Description": "Category",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Get Element Category\n\nElement.GetCategory: Category"
+    },
+    {
+      "ConcreteType": "Dynamo.Nodes.DSModelElementSelection, DSRevitNodesUI",
+      "NodeType": "ExtensionNode",
+      "InstanceId": [
+        "6d75996c-0522-471a-8e39-8c039b7eeaa8-000466dc"
+      ],
+      "Id": "8225a87089c841d0813cf23afe3c9956",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "9627ab9cbdd14fc681d12c8fe99b65be",
+          "Name": "Element",
+          "Description": "The selected elements.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.Filename, CoreNodeModels",
+      "HintPath": "C:\\Users\\User\\Documents\\Dynamo Scripts\\Dimension Converter.py.py",
+      "InputValue": ".\\Dimension Converter.py.py",
+      "NodeType": "ExtensionNode",
+      "Id": "4c5a4a28b3804ef6865652f1530587bd",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "ae1af7826cc94d4ea5096d686f8d5fbe",
+          "Name": "",
+          "Description": "File Path",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows you to select a file on the system to get its file path."
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "DSCore.IO.FileSystem.ReadText@var",
+      "Id": "a2c8d66e5a484063bf7caf9c2a5f424b",
+      "Inputs": [
+        {
+          "Id": "9c11311f1fef4659b6841cb2f9ba2900",
+          "Name": "file",
+          "Description": "File object to read text from\n\nvar",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "717ee0b948cb44fb876b6cdb68a80910",
+          "Name": "string",
+          "Description": "Contents of the text file.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Reads a text file and returns the contents as a string.\n\nFileSystem.ReadText (file: var): string"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "5184ed1be6234ce3839c7a6a547358e3",
+      "Inputs": [
+        {
+          "Id": "9a454ae9ce264007b85791990143e985",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "0d2169d353fb432e9e86f0b0aa2f3eb9",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualize the node's output"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "\r\nimport sys, clr\r\nfrom fractions import Fraction\r\nfrom io import StringIO\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\nclr.AddReference(\"RevitServices\")\r\nimport RevitServices\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\n\r\n# dictionary\r\nnumerator = {\r\n\"0\" : \"⁰\",\r\n\"1\" : \"¹\",\r\n\"2\" : \"²\",\r\n\"3\" : \"³\",\r\n\"4\" : \"⁴\",\r\n\"5\" : \"⁵\",\r\n\"6\" : \"⁶\",\r\n\"7\" : \"⁷\",\r\n\"8\" : \"⁸\",\r\n\"9\" : \"⁹\",\r\n}\r\n\r\ndenominator = {\r\n\"0\" : \"₀\",\r\n\"1\" : \"₁\",\r\n\"2\" : \"₂\",\r\n\"3\" : \"₃\",\r\n\"4\" : \"₄\",\r\n\"5\" : \"₅\",\r\n\"6\" : \"₆\",\r\n\"7\" : \"₇\",\r\n\"8\" : \"₈\",\r\n\"9\" : \"₉\",\r\n}\r\n\r\n\r\n# The inputs to this node will be stored as a list in the IN variables.\r\nmodels = IN[0]\r\n\r\nTransactionManager.Instance.EnsureInTransaction(doc)\r\n\r\nfor model in models:\r\n\r\n    # The inputs to this node will be stored as a list in the IN variables.\r\n    numberStr = str(model.Value[0])\r\n    print(model.Id, numberStr)\r\n    \r\n    # Split betwen whole and decimal\r\n    numberStrList = numberStr.split(\".\")\r\n    wholeNum = numberStrList[0]\r\n    \r\n    \r\n    # Check if there's an inch\r\n    if len(numberStrList) == 2 and numberStrList[1] != \"0\":\r\n        \r\n    \r\n        decimalNum = float(\".\" + numberStrList[1])\r\n        decimalNumInch = decimalNum * 12\r\n        \r\n    \r\n        # Get the Fraction\r\n        fractional = Fraction(decimalNumInch).limit_denominator()\r\n        improperNum = fractional.numerator\r\n        improperDeno = fractional.denominator\r\n        \r\n        # Inches mixed number\r\n        mixedWhole = improperNum // improperDeno\r\n        mixedNum = improperNum % improperDeno\r\n        \r\n        # # Check if it has fractional inch\r\n        if mixedWhole != 0:\r\n        \r\n            superscript = \"\"\r\n            for num in str(mixedNum):\r\n                superscript += numerator[num]\r\n            \r\n            subscript = \"\"\r\n            for num in str(improperDeno):\r\n                subscript += denominator[num]\r\n                        \r\n            \r\n            # Set the value override\r\n            if mixedWhole == 0: \r\n                mixedWhole = \"\"\r\n\r\n            \r\n            value = f\"{wholeNum}'-{mixedWhole}{superscript}⁄{subscript}''\"\r\n            \r\n            model.SetValueOverride([value])\r\n        else:\r\n            value = f\"{wholeNum}'-{mixedWhole}''\"\r\n            model.SetValueOverride([value])\r\n    else:\r\n        # Only a whole number\r\n        value = f\"{wholeNum}'-0''\"\r\n        \r\n        model.SetValueOverride([value])\r\n        print(\"THIRD\")\r\n\r\n\r\nTransactionManager.Instance.TransactionTaskDone()\r\nOUT = output.getvalue()",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "8f03eeaf53e041ada78cead25c516678",
+      "Inputs": [
+        {
+          "Id": "80dbc71e0aa24634a07d4119cf7f1b0b",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "dacb4dfb82574c8d85408fbfc64f1c74",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "5b5e8794b0a641a18edf3d9cbd30d765",
+      "End": "80dbc71e0aa24634a07d4119cf7f1b0b",
+      "Id": "90da256bc8dc4e81b24e9dbd7c2d6d2c",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "681c16b1128c4658968fc1f4b57f8e65",
+      "End": "1fb9e03ee419482fafcc0e0eadb597de",
+      "Id": "904f6c3838e14ab189a0b4095e1c041a",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "9627ab9cbdd14fc681d12c8fe99b65be",
+      "End": "bd9898e6fa434046b20ed1bdc94d1820",
+      "Id": "b74867bb37894f5caa0b775477887904",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "ae1af7826cc94d4ea5096d686f8d5fbe",
+      "End": "9c11311f1fef4659b6841cb2f9ba2900",
+      "Id": "49457fcf2551407085b01cb791c4df14",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "dacb4dfb82574c8d85408fbfc64f1c74",
+      "End": "9a454ae9ce264007b85791990143e985",
+      "Id": "c66ef49e24fa41659761a6b391a717a6",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "2.13",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.13.1.3887",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Name": "All Elements of Category",
+        "ShowGeometry": true,
+        "Id": "ba3eb0c901ad456280e867031eecc2ef",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 342.80980587295028,
+        "Y": 582.05835506866731
+      },
+      {
+        "Name": "Element.GetCategory",
+        "ShowGeometry": true,
+        "Id": "8cc6442a38ef4dc39204922fcc4f78b1",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 37.871511829654423,
+        "Y": 594.85244892534365
+      },
+      {
+        "Name": "Select Model Element",
+        "ShowGeometry": true,
+        "Id": "8225a87089c841d0813cf23afe3c9956",
+        "IsSetAsInput": true,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -253.99531140136878,
+        "Y": 594.04919723806449
+      },
+      {
+        "Name": "File Path",
+        "ShowGeometry": true,
+        "Id": "4c5a4a28b3804ef6865652f1530587bd",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -668.54410357838185,
+        "Y": -330.5424282686995
+      },
+      {
+        "Name": "FileSystem.ReadText",
+        "ShowGeometry": true,
+        "Id": "a2c8d66e5a484063bf7caf9c2a5f424b",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -339.65007237218481,
+        "Y": -327.58860467300246
+      },
+      {
+        "Name": "Watch",
+        "ShowGeometry": true,
+        "Id": "5184ed1be6234ce3839c7a6a547358e3",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1205.8799806000948,
+        "Y": 411.10357970449013
+      },
+      {
+        "Name": "Python Script",
+        "ShowGeometry": true,
+        "Id": "8f03eeaf53e041ada78cead25c516678",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 849.79570065531766,
+        "Y": 388.38478177983984
+      }
+    ],
+    "Annotations": [],
+    "X": -223.11203978071467,
+    "Y": -137.28289216265807,
+    "Zoom": 0.9391727673311081
+  }
+}

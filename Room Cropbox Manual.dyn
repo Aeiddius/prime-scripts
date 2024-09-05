@@ -1,0 +1,267 @@
+{
+  "Uuid": "7bc36ab5-7ed9-4156-8ac1-09c73f4291ef",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "Room Cropbox - Bbox",
+  "ElementResolver": {
+    "ResolutionMap": {
+      "Document.Current": {
+        "Key": "Revit.Application.Document",
+        "Value": "RevitNodes.dll"
+      },
+      "Document": {
+        "Key": "Revit.Application.Document",
+        "Value": "RevitNodes.dll"
+      },
+      "Elements.View": {
+        "Key": "Revit.Elements.Views.View",
+        "Value": "RevitNodes.dll"
+      },
+      "Revit.Elements.Views.View": {
+        "Key": "Revit.Elements.Views.View",
+        "Value": "RevitNodes.dll"
+      },
+      "FileSystem": {
+        "Key": "DSCore.IO.FileSystem",
+        "Value": "DSCoreNodes.dll"
+      },
+      "DateTime.Now": {
+        "Key": "DSCore.DateTime",
+        "Value": "DSCoreNodes.dll"
+      }
+    }
+  },
+  "Inputs": [
+    {
+      "Id": "5d9b16b050874d26ab240fd79688e4f9",
+      "Name": "Select Model Element",
+      "Type": "hostSelection",
+      "Value": "8ead8b62-b494-4d37-ace5-8c4967220b42-0010613d",
+      "Description": "Select a model element from the document.",
+      "SelectedIndex": 0
+    }
+  ],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "dcd36e43323c48b6949f63027a04a62a",
+      "Inputs": [
+        {
+          "Id": "eee5d43a00fb4ec2b1a280c1a8ec12ff",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "4ffd519c161d4fc59141aefe2ee1ef54",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualize the node's output"
+    },
+    {
+      "ConcreteType": "Dynamo.Nodes.DSModelElementSelection, DSRevitNodesUI",
+      "NodeType": "ExtensionNode",
+      "InstanceId": [
+        "8ead8b62-b494-4d37-ace5-8c4967220b42-0010613d"
+      ],
+      "Id": "5d9b16b050874d26ab240fd79688e4f9",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "6246e0d0777a46d68e2763c4fdb636e4",
+          "Name": "Element",
+          "Description": "The selected elements.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "DateTime.Now;",
+      "Id": "8e52fb58fbcc454fbbb3c7202c5a313d",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "f1053a8e49a2432792aa8d2dcaafdf0d",
+          "Name": "",
+          "Description": "Value of expression at line 1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows for DesignScript code to be authored directly"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n \r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import CurveLoop, ElementId, Plane, BoundingBoxXYZ\r\nfrom Autodesk.Revit.DB import ViewPlan, CurveLoop\r\nfrom Autodesk.Revit.DB import DetailLine , ViewType\r\nfrom Autodesk.Revit.DB.Architecture import Room\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import ViewDuplicateOption, Line, ViewFamily\r\n\r\n \r\nclr.AddReference('RevitServices')\r\nclr.AddReference('RevitAPI')\r\nclr.AddReference('RevitNodes')\r\nclr.AddReference('RevitAPIUI')\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nuidoc = DocumentManager.Instance.CurrentUIApplication.ActiveUIDocument\r\n\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n\r\ndef print_member(obj):\r\n    for i in dir(obj):\r\n        print(i)\r\n\r\ndef set_view_crop(view, curve):\r\n    crop_manager = view.GetCropRegionShapeManager()\r\n    crop_shape = crop_manager.GetCropShape()[0]\r\n    crop_manager.SetCropShape(curve)\r\n\r\ndef get_room_curve(group_elements):\r\n    room_curve = CurveLoop()\r\n    for id in group_elements:\r\n        e = doc.GetElement(id)\r\n        if isinstance(e, DetailLine):\r\n            line = e.GeometryCurve\r\n            room_curve.Append(line)\r\n    return room_curve\r\n \r\ndef duplicate_view(view, name):\r\n    newId = view.Duplicate(ViewDuplicateOption.AsDependent)\r\n    newView = doc.GetElement(newId)\r\n    newView.CropBoxVisible = False\r\n    newView.Name = name\r\n    return newView\r\n \r\n@transaction\r\ndef start():\r\n    refresh = IN[1]\r\n\r\n    # Get Variables\r\n    view = uidoc.ActiveView\r\n    group = UnwrapElement(IN[0])\r\n    group_elements = group.GetMemberIds()\r\n\r\n    # Extract Room and Room Curve\r\n    room_curve = get_room_curve(group_elements)\r\n\r\n    # Duplicate View as dependent\r\n    newView = duplicate_view(view, group.Name)\r\n\r\n    # Set view crop\r\n    set_view_crop(newView, room_curve)\r\n\r\n\r\n\r\nstart()\r\n\r\nOUT = output.getvalue()\r\n\r\n\r\n",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "37c147e7c3a24699a9f245d6d24d672c",
+      "Inputs": [
+        {
+          "Id": "e2527e19fdd84cafbdd418d9e5421586",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "35c8fe51a8054d5285ba8512242f063c",
+          "Name": "IN[1]",
+          "Description": "Input #1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "fbcde5a673c846f292814b042b1d9f0f",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "6246e0d0777a46d68e2763c4fdb636e4",
+      "End": "e2527e19fdd84cafbdd418d9e5421586",
+      "Id": "9437b2578821438c98e3ecce71b1d206",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "f1053a8e49a2432792aa8d2dcaafdf0d",
+      "End": "35c8fe51a8054d5285ba8512242f063c",
+      "Id": "baea5239bef3479e902dc9daea6adbac",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "fbcde5a673c846f292814b042b1d9f0f",
+      "End": "eee5d43a00fb4ec2b1a280c1a8ec12ff",
+      "Id": "e1b68eb4c5d14bd897dbb635ab44a298",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "2.13",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.13.1.3887",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Name": "Watch",
+        "ShowGeometry": true,
+        "Id": "dcd36e43323c48b6949f63027a04a62a",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 517.58571706765179,
+        "Y": 129.07646093999409
+      },
+      {
+        "Name": "Select Model Element",
+        "ShowGeometry": true,
+        "Id": "5d9b16b050874d26ab240fd79688e4f9",
+        "IsSetAsInput": true,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 101.7528804779073,
+        "Y": -74.3664586893261
+      },
+      {
+        "Name": "Code Block",
+        "ShowGeometry": true,
+        "Id": "8e52fb58fbcc454fbbb3c7202c5a313d",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 83.513936684468831,
+        "Y": 63.856464559946005
+      },
+      {
+        "Name": "Python Script",
+        "ShowGeometry": true,
+        "Id": "37c147e7c3a24699a9f245d6d24d672c",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 473.918341685358,
+        "Y": -78.503434517364667
+      }
+    ],
+    "Annotations": [],
+    "X": 72.296807450141642,
+    "Y": 287.35789533965,
+    "Zoom": 0.88098955216881292
+  }
+}
