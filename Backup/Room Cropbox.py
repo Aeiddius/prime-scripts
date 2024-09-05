@@ -1,10 +1,8 @@
 import clr
 import math
 import sys
-import re
-
 from io import StringIO
-
+ 
 import Autodesk
 import RevitServices
 from Autodesk.Revit.DB import *
@@ -61,71 +59,38 @@ def duplicate_view(view, name):
     newView.CropBoxVisible = False
     newView.Name = name
     return newView
-
+ 
 def get_model_groups(base_view_id):
     detail_groups = FilteredElementCollector(doc, base_view_id).OfCategory(BuiltInCategory.OST_IOSDetailGroups).ToElements()
     return detail_groups
 
-def get_model_curves(groups):
-    curve_dict = {}
-    for group in groups:
-        group_elements = group.GetMemberIds()
-        element = get_room_curve(group_elements)
-        curve_dict[group.Name] = element
-    return curve_dict
+@transaction
+def start():
+    views = UnwrapElement(IN[0])
+    base_view_id = ElementId(UnwrapElement(IN[1]))
+    base_view = doc.GetElement(base_view_id)
+    
+    detail_groups = get_model_groups(base_view_id)
 
-def create_unit_views(view, room_curve, group_name, num):
+    for group in detail_groups:
+        print(i.GetMemberIds())
+
+    # Get Variable
+    # print(base_view)
+    # for view in views:
+    #     print(view)
+
+    # group = UnwrapElement(IN[0])
     # group_elements = group.GetMemberIds()
 
     # # Extract Room and Room Curve
     # room_curve = get_room_curve(group_elements)
 
+    # # Duplicate View as dependent
+    # newView = duplicate_view(view, group.Name)
 
-    # Duplicate View as dependent
-    newName = group_name.replace("04", num, 1)
-    newView = duplicate_view(view, newName)
-
-    # Set view crop
-    set_view_crop(newView, room_curve)
-
-def get_number_list(views):
-    result = []
-    for view in views:
-        num = re.sub(r'\D', '', view.Name).strip()
-        if num:
-            result.append(num)
-    return result
-
-def get_only_range(views, range):
-    range_min = range[0]
-    range_max = range[1]
-
-    accepted_views = []
-    for view in views:
-        num = re.sub(r'\D', '', view.Name).strip()
-        num_int = int(num)
-        if num_int < range_min or num_int > range_max: continue
-        accepted_views.append([view, num])
-    return accepted_views
-
-@transaction
-def start():
-    views = UnwrapElement(IN[0])
-    range = UnwrapElement(IN[2])
-
-    
-    base_view_id = ElementId(UnwrapElement(IN[1]))    
-    model_detail_group = get_model_groups(base_view_id)
-    model_curves = get_model_curves(model_detail_group)
-
-
-    view_range = get_only_range(views, range)
-    for view_group in view_range:
-        view = view_group[0]
-        num = view_group[1]
-        for group_name, curve in model_curves.items():
-            print(view, curve, group_name, num)
-            create_unit_views(view, curve, group_name, num)
+    # # Set view crop
+    # set_view_crop(newView, room_curve)
 
 
 

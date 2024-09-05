@@ -20,7 +20,7 @@
     {
       "Id": "82d749911bb047eb8b57b0e916b6dd1b",
       "Name": "Python Script",
-      "Type": "unknown",
+      "Type": "string",
       "InitialValue": "",
       "Description": "Runs an embedded Python script."
     }
@@ -236,14 +236,23 @@
     {
       "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
       "NodeType": "CodeBlockNode",
-      "Code": "currentDateTime = DateTime.Now;",
+      "Code": "currentDateTime = DateTime.Now;\n\n\"sdsssxsssssss\";",
       "Id": "393553afad264ff2b09790b5c82addc0",
       "Inputs": [],
       "Outputs": [
         {
-          "Id": "eaabf764e62c4d07a03b60dacb0e11de",
+          "Id": "548eabdaee6f465e8e6e28da2e1c6640",
           "Name": "",
           "Description": "currentDateTime",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "406b6c390d2b4872b345c654836bf569",
+          "Name": "",
+          "Description": "Value of expression at line 3",
           "UsingDefaultValue": false,
           "Level": 2,
           "UseLevels": false,
@@ -292,9 +301,9 @@
       "IsHidden": "False"
     },
     {
-      "Start": "eaabf764e62c4d07a03b60dacb0e11de",
+      "Start": "548eabdaee6f465e8e6e28da2e1c6640",
       "End": "6894cfc872df465d90b8078ecf3315de",
-      "Id": "67c2b077b10e4e06b90a2cd61eadcfc9",
+      "Id": "c6e15ee8aa314b7a95b2a77f8e04b9e7",
       "IsHidden": "False"
     }
   ],
@@ -413,8 +422,8 @@
       }
     ],
     "Annotations": [],
-    "X": -212.69908347858359,
-    "Y": 450.55258005818251,
+    "X": -134.69908347858359,
+    "Y": 435.55258005818251,
     "Zoom": 0.8555570225576955
   }
 }

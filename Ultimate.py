@@ -1,5 +1,7 @@
 import clr
 import math
+import re
+
 from io import StringIO
 
 import Autodesk
@@ -103,10 +105,15 @@ def duplicate_view(element, name, family_type):
 
     return dupli_element
 
+def contains_number_regex(s):
+    return bool(re.search(r'\d', s))
+
 def _get_all_unit_views(elements):
     unit_plans = []
     for el in elements:
         if not el.Name.endswith("-U"): continue
+        if "-B-" in el.Name: continue # Remove Building B
+        if not contains_number_regex(el.Name): continue
         unit_plans.append(el)
     return unit_plans
 
