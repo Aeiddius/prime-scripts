@@ -62,7 +62,7 @@
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
       "NodeType": "PythonScriptNode",
-      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Dimension, ElementTransformUtils\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ\r\n\r\n\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n \r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\n@transaction \r\ndef start():\r\n  target_levels = UnwrapElement(IN[1])\r\n  t_level = target_levels[0]\r\n  print(t_level)\r\n  \r\n  # Fliter Groups\r\n  elements = UnwrapElement(IN[0])\r\n  group = []\r\n  for e in elements:\r\n    if isinstance(e, Group):\r\n      group.append(e)\r\n   \r\n   \r\n  # Iterate through groups\r\n  for grp in group:\r\n    grp_elements = grp.GetMemberIds()\r\n    elems = [doc.GetElement(e) for e in grp_elements]\r\n    for e in elems:\r\n      transform = e.Location.Point\r\n      elementId = e.Id\r\n      # params = e.GetParameters()\r\n      # print(params)\r\n      # print(elementId)\r\n      \r\n\r\n      copied_instance = ElementTransformUtils.CopyElement(doc, elementId, transform)\r\n      print(copied_instance)\r\n      schedule_level = copied_instance[0].GetParameters(\"Schedule Level\")[0]\r\n      print(schedule_level)\r\n      # param_ViewType.Set(family_type.Id)\r\n\r\n      # print(copied_instance)\r\n      # Element.SetParameterByName(copied_instance, \"Schedule Level\", t_level)\r\n\r\n      # copied_instance.Level = t_level\r\n\r\n      break\r\n    break\r\n\r\n  # print(target_levels)\r\n\r\nstart()\r\n\r\nOUT = output.getvalue()",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Dimension, ElementTransformUtils\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ\r\n\r\n\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n \r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\n@transaction \r\ndef start():\r\n  target_levels = UnwrapElement(IN[1])\r\n  t_level = target_levels[0]\r\n  print(t_level.Id)\r\n  \r\n  # Fliter Groups\r\n  elements = UnwrapElement(IN[0])\r\n  group = []\r\n  for e in elements:\r\n    if isinstance(e, Group):\r\n      group.append(e)\r\n   \r\n   \r\n  # Iterate through groups\r\n  for grp in group:\r\n    grp_elements = grp.GetMemberIds()\r\n    elems = [doc.GetElement(e) for e in grp_elements]\r\n    for e in elems:\r\n      transform = e.Location.Point\r\n      elementId = e.Id\r\n      # params = e.GetParameters()\r\n      # print(params)\r\n      # print(elementId)\r\n      \r\n\r\n      copied_id = ElementTransformUtils.CopyElement(doc, elementId, transform)\r\n      copied_instance = doc.GetElement(copied_id[0])\r\n      print(copied_id[0])\r\n      schedule_level = copied_instance.GetParameters(\"Schedule Level\")[0]\r\n      elevation_level = copied_instance.GetParameters(\"Elevation from Level\")[0]\r\n      \r\n      print(schedule_level.AsString())\r\n      print(elevation_level.AsString())\r\n      schedule_level.Set(t_level.Id)\r\n      elevation_level.SetValueString(\"1000mm\")\r\n\r\n      # print(copied_instance)\r\n      # Element.SetParameterByName(copied_instance, \"Schedule Level\", t_level)\r\n\r\n      # copied_instance.Level = t_level\r\n\r\n      break\r\n    break\r\n\r\n  # print(target_levels)\r\n\r\nstart()\r\n\r\nOUT = output.getvalue()",
       "Engine": "CPython3",
       "VariableInputPorts": true,
       "Id": "9ac2110baf3645d098701b32cc3145bd",
@@ -396,8 +396,8 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 991.66950998749962,
-        "Y": 95.544538629533392
+        "X": 1058.5544075922846,
+        "Y": 106.61289158877042
       },
       {
         "Name": "Target Levels Get",
@@ -451,8 +451,8 @@
       }
     ],
     "Annotations": [],
-    "X": -463.43624067306791,
-    "Y": -6.0771942128740193,
-    "Zoom": 1.2287284341298721
+    "X": -400.44552908645437,
+    "Y": -29.345826148390586,
+    "Zoom": 0.9669083797801904
   }
 }
