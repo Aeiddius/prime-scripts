@@ -62,7 +62,7 @@
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
       "NodeType": "PythonScriptNode",
-      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Dimension\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n \r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\n@transaction\r\ndef start(model):\r\n  groups = UnwrapElement(model)\r\n  elements = groups[0].GetMemberIds()\r\n  elements_id = [doc.GetElement(e) for e in elements]\r\n  for i in elements_id:\r\n    print(i.Name)\r\n\r\n\r\n\r\nstart(IN[0])\r\n\r\nOUT = output.getvalue()",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Dimension, ElementTransformUtils\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ\r\n\r\n\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n \r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\n@transaction \r\ndef start():\r\n  target_levels = UnwrapElement(IN[1])\r\n  t_level = target_levels[0]\r\n  print(t_level)\r\n  \r\n  # Fliter Groups\r\n  elements = UnwrapElement(IN[0])\r\n  group = []\r\n  for e in elements:\r\n    if isinstance(e, Group):\r\n      group.append(e)\r\n   \r\n   \r\n  # Iterate through groups\r\n  for grp in group:\r\n    grp_elements = grp.GetMemberIds()\r\n    elems = [doc.GetElement(e) for e in grp_elements]\r\n    for e in elems:\r\n      transform = e.Location.Point\r\n      elementId = e.Id\r\n      # params = e.GetParameters()\r\n      # print(params)\r\n      # print(elementId)\r\n      \r\n\r\n      copied_instance = ElementTransformUtils.CopyElement(doc, elementId, transform)\r\n      print(copied_instance)\r\n      schedule_level = copied_instance[0].GetParameters(\"Schedule Level\")[0]\r\n      print(schedule_level)\r\n      # param_ViewType.Set(family_type.Id)\r\n\r\n      # print(copied_instance)\r\n      # Element.SetParameterByName(copied_instance, \"Schedule Level\", t_level)\r\n\r\n      # copied_instance.Level = t_level\r\n\r\n      break\r\n    break\r\n\r\n  # print(target_levels)\r\n\r\nstart()\r\n\r\nOUT = output.getvalue()",
       "Engine": "CPython3",
       "VariableInputPorts": true,
       "Id": "9ac2110baf3645d098701b32cc3145bd",
@@ -71,6 +71,15 @@
           "Id": "87c637acc7c543b497e58bf3a3158887",
           "Name": "IN[0]",
           "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "6c7f3cd133554f4f8a72806446a9b2fd",
+          "Name": "IN[1]",
+          "Description": "Input #1",
           "UsingDefaultValue": false,
           "Level": 2,
           "UseLevels": false,
@@ -123,7 +132,7 @@
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
       "NodeType": "PythonScriptNode",
-      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Dimension\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n \r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\n\r\ndef  level_printer():\r\n  # Get all levels in the document\r\n  collector = FilteredElementCollector(doc).OfClass(Level)\r\n  levels = collector.ToElements()\r\n\r\n  for level in levels:\r\n      lvl_name = level.Name\r\n      lvl_id = level.Id.ToString()\r\n      print(f'\"{lvl_id}\" # {lvl_name}, ')\r\n\r\ndef  level_sort(target_levels):\r\n  # Get all levels in the document\r\n  collector = FilteredElementCollector(doc).OfClass(Level)\r\n  levels = collector.ToElements()\r\n\r\n  # Create a list of level names\r\n  level_names = []\r\n  for level in levels:\r\n      lvl_name = level.Name\r\n      lvl_id = level.Id.ToString()\r\n      if lvl_id in target_levels:\r\n        level_names.append(level)\r\n  return level_names\r\n\r\n@transaction\r\ndef start():\r\n  base_levels = UnwrapElement(IN[0])\r\n  target_levels = UnwrapElement(IN[1])\r\n\r\n  # level_printer()\r\n\r\n  levels = level_sort(target_levels)\r\n  for i in levels:\r\n    print(i.Id.ToString())\r\n\r\nstart()\r\n\r\nOUT = output.getvalue()",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Dimension\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\nresult = []\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n \r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\n@transaction\r\ndef start():\r\n  target_levels = UnwrapElement(IN[0])\r\n\r\n  # Get all levels in the document\r\n  collector = FilteredElementCollector(doc).OfClass(Level)\r\n  levels = collector.ToElements()\r\n\r\n  # Create a list of level names\r\n  for level in levels:\r\n      lvl_name = level.Name\r\n      lvl_id = level.Id.ToString()\r\n      if lvl_id in target_levels:\r\n        result.append(level)\r\n\r\n\r\nstart()\r\n\r\nOUT = result",
       "Engine": "CPython3",
       "VariableInputPorts": true,
       "Id": "f9dbb57a9acd4f90938320b4622650eb",
@@ -132,15 +141,6 @@
           "Id": "f0353e4cae2349b8a728e04ee048df0f",
           "Name": "IN[0]",
           "Description": "Input #0",
-          "UsingDefaultValue": false,
-          "Level": 2,
-          "UseLevels": false,
-          "KeepListStructure": false
-        },
-        {
-          "Id": "48908d028a18488a87d322aa317c0a98",
-          "Name": "IN[1]",
-          "Description": "Input #1",
           "UsingDefaultValue": false,
           "Level": 2,
           "UseLevels": false,
@@ -193,12 +193,12 @@
     {
       "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
       "NodeType": "CodeBlockNode",
-      "Code": "levels = [\n\n\"694\", // 2nd Floor\n\"1345358\", // 5th Floor\n\"1345666\", // 4th Floor\n\"1345676\", // Roof Deck\n\"1345678\" // 3rd Floor\n\n];",
+      "Code": "levels = [\n\t\"694\", // 2nd Floor\n\t\"1345358\", // 5th Floor\n\t\"1345666\", // 4th Floor\n\t\"1345676\", // Roof Deck\n\t\"1345678\" // 3rd Floor\n];",
       "Id": "c64f29deac374d16b23711f302e13b8f",
       "Inputs": [],
       "Outputs": [
         {
-          "Id": "2ebb57cf93f24240858e774b1db986f9",
+          "Id": "189916397fa249c785387ba9a6b18539",
           "Name": "",
           "Description": "levels",
           "UsingDefaultValue": false,
@@ -275,8 +275,8 @@
   "Connectors": [
     {
       "Start": "ee699ff4f0614ac79d5046d46a4f98e6",
-      "End": "f0353e4cae2349b8a728e04ee048df0f",
-      "Id": "d5a8db4d298542dabe3f8ab012616833",
+      "End": "f6489d80bf254143a25d33a8f7853f32",
+      "Id": "7bf7f8250b64465895df1c567528aaf8",
       "IsHidden": "False"
     },
     {
@@ -298,9 +298,15 @@
       "IsHidden": "False"
     },
     {
-      "Start": "2ebb57cf93f24240858e774b1db986f9",
-      "End": "48908d028a18488a87d322aa317c0a98",
-      "Id": "7fc376ca6cc446ccbd6e669088c8a197",
+      "Start": "a4d55d58b0b14960850ada5a11bc364a",
+      "End": "6c7f3cd133554f4f8a72806446a9b2fd",
+      "Id": "1d3f52b582ab4df38cc0369deb62619b",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "189916397fa249c785387ba9a6b18539",
+      "End": "f0353e4cae2349b8a728e04ee048df0f",
+      "Id": "68a6404fedb94d908532d14466ddd178",
       "IsHidden": "False"
     },
     {
@@ -336,7 +342,7 @@
       "HasRunWithoutCrash": true,
       "IsVisibleInDynamoLibrary": true,
       "Version": "2.13.1.3887",
-      "RunType": "Automatic",
+      "RunType": "Manual",
       "RunPeriod": "1000"
     },
     "Camera": {
@@ -360,8 +366,8 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": -249.26964677604661,
-        "Y": 254.8194290669407
+        "X": -127.26354794985861,
+        "Y": 203.70800071703803
       },
       {
         "Name": "All Elements at Level",
@@ -370,8 +376,8 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 369.10087664706555,
-        "Y": 141.7418123466814
+        "X": 289.5378549307701,
+        "Y": 90.520916850462868
       },
       {
         "Name": "Python Script",
@@ -380,8 +386,8 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 775.071518453178,
-        "Y": 57.713199558441147
+        "X": 788.92343325558772,
+        "Y": 296.36856116422763
       },
       {
         "Name": "Watch",
@@ -390,11 +396,11 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 1018.0332350436786,
-        "Y": 84.721879562595944
+        "X": 991.66950998749962,
+        "Y": 95.544538629533392
       },
       {
-        "Name": "Python Script",
+        "Name": "Target Levels Get",
         "ShowGeometry": true,
         "Id": "f9dbb57a9acd4f90938320b4622650eb",
         "IsSetAsInput": false,
@@ -410,18 +416,18 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 375.8944362165156,
-        "Y": 425.04716537230757
+        "X": 377.68214470647092,
+        "Y": 425.94101961728512
       },
       {
-        "Name": "Code Block",
+        "Name": "Target Levels",
         "ShowGeometry": true,
         "Id": "c64f29deac374d16b23711f302e13b8f",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": -364.28958886540846,
-        "Y": 407.90144942788169
+        "X": -299.417391344378,
+        "Y": 427.55969110092121
       },
       {
         "Name": "Level Printer",
@@ -430,8 +436,8 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 20.005585238795561,
-        "Y": 704.965984368266
+        "X": -141.78203310214803,
+        "Y": 779.15588670140619
       },
       {
         "Name": "Watch",
@@ -440,13 +446,13 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 308.38396132484024,
-        "Y": 756.80272899506554
+        "X": 97.434359510129184,
+        "Y": 820.26638038847432
       }
     ],
     "Annotations": [],
-    "X": 500.96515821843423,
-    "Y": -248.9396908444304,
-    "Zoom": 0.82847747651827885
+    "X": -463.43624067306791,
+    "Y": -6.0771942128740193,
+    "Zoom": 1.2287284341298721
   }
 }
