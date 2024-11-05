@@ -1,0 +1,452 @@
+{
+  "Uuid": "d3729592-126c-4263-96c7-1ee70d6622dc",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "Level Copy",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "DSRevitNodesUI.Levels, DSRevitNodesUI",
+      "SelectedIndex": 0,
+      "SelectedString": "1st Floor",
+      "NodeType": "ExtensionNode",
+      "Id": "d2c8d38c69cf41efbabb859980b4ba7e",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "ee699ff4f0614ac79d5046d46a4f98e6",
+          "Name": "Levels",
+          "Description": "The selected Levels",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Select a level in the active document"
+    },
+    {
+      "ConcreteType": "DSRevitNodesUI.ElementsAtLevel, DSRevitNodesUI",
+      "NodeType": "ExtensionNode",
+      "Id": "c5780af908e04797a814f50a93f4a52c",
+      "Inputs": [
+        {
+          "Id": "f6489d80bf254143a25d33a8f7853f32",
+          "Name": "Level",
+          "Description": "A Level",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "277b7bd35725450893ce34ba6aea3575",
+          "Name": "Elements",
+          "Description": "Elements at the given level.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Get all the elements at the specified Level from the model."
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Dimension\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n \r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\n@transaction\r\ndef start(model):\r\n  groups = UnwrapElement(model)\r\n  elements = groups[0].GetMemberIds()\r\n  elements_id = [doc.GetElement(e) for e in elements]\r\n  for i in elements_id:\r\n    print(i.Name)\r\n\r\n\r\n\r\nstart(IN[0])\r\n\r\nOUT = output.getvalue()",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "9ac2110baf3645d098701b32cc3145bd",
+      "Inputs": [
+        {
+          "Id": "87c637acc7c543b497e58bf3a3158887",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "42d361cadbd34ed280084ec0be87a4d1",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "6ab5a78891d14daeb96a5531b2a692d9",
+      "Inputs": [
+        {
+          "Id": "df821dcf999a4462b3e416b98d8a6e08",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "34d2a55a10ed474b917dbb1720f965ca",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualize the node's output"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Dimension\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n \r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\n\r\ndef  level_printer():\r\n  # Get all levels in the document\r\n  collector = FilteredElementCollector(doc).OfClass(Level)\r\n  levels = collector.ToElements()\r\n\r\n  for level in levels:\r\n      lvl_name = level.Name\r\n      lvl_id = level.Id.ToString()\r\n      print(f'\"{lvl_id}\" # {lvl_name}, ')\r\n\r\ndef  level_sort(target_levels):\r\n  # Get all levels in the document\r\n  collector = FilteredElementCollector(doc).OfClass(Level)\r\n  levels = collector.ToElements()\r\n\r\n  # Create a list of level names\r\n  level_names = []\r\n  for level in levels:\r\n      lvl_name = level.Name\r\n      lvl_id = level.Id.ToString()\r\n      if lvl_id in target_levels:\r\n        level_names.append(level)\r\n  return level_names\r\n\r\n@transaction\r\ndef start():\r\n  base_levels = UnwrapElement(IN[0])\r\n  target_levels = UnwrapElement(IN[1])\r\n\r\n  # level_printer()\r\n\r\n  levels = level_sort(target_levels)\r\n  for i in levels:\r\n    print(i.Id.ToString())\r\n\r\nstart()\r\n\r\nOUT = output.getvalue()",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "f9dbb57a9acd4f90938320b4622650eb",
+      "Inputs": [
+        {
+          "Id": "f0353e4cae2349b8a728e04ee048df0f",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "48908d028a18488a87d322aa317c0a98",
+          "Name": "IN[1]",
+          "Description": "Input #1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "e5ddd478962b4e31acae71661a7faca6",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "12293f0858e34a0c8b9a972980d44c37",
+      "Inputs": [
+        {
+          "Id": "3393b19977c14f9eb2a5d95de6f6616e",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "a4d55d58b0b14960850ada5a11bc364a",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualize the node's output"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "levels = [\n\n\"694\", // 2nd Floor\n\"1345358\", // 5th Floor\n\"1345666\", // 4th Floor\n\"1345676\", // Roof Deck\n\"1345678\" // 3rd Floor\n\n];",
+      "Id": "c64f29deac374d16b23711f302e13b8f",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "2ebb57cf93f24240858e774b1db986f9",
+          "Name": "",
+          "Description": "levels",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows for DesignScript code to be authored directly"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Dimension\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n \r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\n\r\ndef  level_printer():\r\n  # Get all levels in the document\r\n  collector = FilteredElementCollector(doc).OfClass(Level)\r\n  levels = collector.ToElements()\r\n\r\n  for level in levels:\r\n      lvl_name = level.Name\r\n      lvl_id = level.Id.ToString()\r\n      print(f'\"{lvl_id}\" # {lvl_name}, ')\r\n\r\n\r\n@transaction\r\ndef start():\r\n  level_printer()\r\n\r\nstart()\r\n\r\nOUT = output.getvalue()",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "51eee1a5183449ea8b1b41e1be5e883b",
+      "Inputs": [
+        {
+          "Id": "da281a05f4434ef5a51c64eff76017f6",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "fc2d5da027a9470b8cba216935cc5ddb",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "3be0be1d6284457caed12aca0089d218",
+      "Inputs": [
+        {
+          "Id": "60c1f5e2e5ec4095a01d71e4e0d70139",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "c11a009194ee49dfbebe59ae81d0d292",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualize the node's output"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "ee699ff4f0614ac79d5046d46a4f98e6",
+      "End": "f0353e4cae2349b8a728e04ee048df0f",
+      "Id": "d5a8db4d298542dabe3f8ab012616833",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "277b7bd35725450893ce34ba6aea3575",
+      "End": "87c637acc7c543b497e58bf3a3158887",
+      "Id": "eeca3458a4c54f12aaca1fb0b5cd2efe",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "42d361cadbd34ed280084ec0be87a4d1",
+      "End": "df821dcf999a4462b3e416b98d8a6e08",
+      "Id": "5e631110e1214e1ba90d5defe3b98272",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "e5ddd478962b4e31acae71661a7faca6",
+      "End": "3393b19977c14f9eb2a5d95de6f6616e",
+      "Id": "e7a34b390ea54f77adfb8c63cf32c2bf",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "2ebb57cf93f24240858e774b1db986f9",
+      "End": "48908d028a18488a87d322aa317c0a98",
+      "Id": "7fc376ca6cc446ccbd6e669088c8a197",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "fc2d5da027a9470b8cba216935cc5ddb",
+      "End": "60c1f5e2e5ec4095a01d71e4e0d70139",
+      "Id": "1d011afe4e6d44e8838f51fbd6afa7a3",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "2.13",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.13.1.3887",
+      "RunType": "Automatic",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Name": "Levels",
+        "ShowGeometry": true,
+        "Id": "d2c8d38c69cf41efbabb859980b4ba7e",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -249.26964677604661,
+        "Y": 254.8194290669407
+      },
+      {
+        "Name": "All Elements at Level",
+        "ShowGeometry": true,
+        "Id": "c5780af908e04797a814f50a93f4a52c",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 369.10087664706555,
+        "Y": 141.7418123466814
+      },
+      {
+        "Name": "Python Script",
+        "ShowGeometry": true,
+        "Id": "9ac2110baf3645d098701b32cc3145bd",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 775.071518453178,
+        "Y": 57.713199558441147
+      },
+      {
+        "Name": "Watch",
+        "ShowGeometry": true,
+        "Id": "6ab5a78891d14daeb96a5531b2a692d9",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1018.0332350436786,
+        "Y": 84.721879562595944
+      },
+      {
+        "Name": "Python Script",
+        "ShowGeometry": true,
+        "Id": "f9dbb57a9acd4f90938320b4622650eb",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 70.874775722958248,
+        "Y": 452.24994142856872
+      },
+      {
+        "Name": "Watch",
+        "ShowGeometry": true,
+        "Id": "12293f0858e34a0c8b9a972980d44c37",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 375.8944362165156,
+        "Y": 425.04716537230757
+      },
+      {
+        "Name": "Code Block",
+        "ShowGeometry": true,
+        "Id": "c64f29deac374d16b23711f302e13b8f",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -364.28958886540846,
+        "Y": 407.90144942788169
+      },
+      {
+        "Name": "Level Printer",
+        "ShowGeometry": true,
+        "Id": "51eee1a5183449ea8b1b41e1be5e883b",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 20.005585238795561,
+        "Y": 704.965984368266
+      },
+      {
+        "Name": "Watch",
+        "ShowGeometry": true,
+        "Id": "3be0be1d6284457caed12aca0089d218",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 308.38396132484024,
+        "Y": 756.80272899506554
+      }
+    ],
+    "Annotations": [],
+    "X": 500.96515821843423,
+    "Y": -248.9396908444304,
+    "Zoom": 0.82847747651827885
+  }
+}

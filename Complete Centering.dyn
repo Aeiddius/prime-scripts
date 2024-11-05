@@ -1,0 +1,188 @@
+{
+  "Uuid": "5b4ade3f-e6d8-4b12-a606-bf693baab515",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "Complete Centering",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "Dynamo.Nodes.DSModelElementSelection, DSRevitNodesUI",
+      "NodeType": "ExtensionNode",
+      "InstanceId": [
+        "c45ebe74-bcc3-4ee4-9831-fcccf28cdaae-00058edf"
+      ],
+      "Id": "d81476ceeb344ef59223895cce8c2436",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "03cac6ce0a224811a18836749e52b508",
+          "Name": "Element",
+          "Description": "The selected elements.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Dimension\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\n# Import model  \r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n\r\n\r\ndef print_member(obj):\r\n    for i in dir(obj):\r\n        print(i)\r\n\r\n@transaction\r\ndef start():\r\n    element = UnwrapElement(IN[0])\r\n    line = element.get_Curve()\r\n\r\n    element.TextPosition = line.Origin\r\n    \r\n    for i in element.get_ParametersMap():\r\n        print(i)\r\n\r\nstart()\r\nOUT = output.getvalue()\r\n",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "b3157a3c16614bf8ae315643f895c71b",
+      "Inputs": [
+        {
+          "Id": "a5a8cfed55394adab13022c7bbd85845",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "31ad4a4a18e64a27968242ed2a7a6d66",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "451c3eee96114050942c6a9a790aec0b",
+      "Inputs": [
+        {
+          "Id": "fb83682abaa04b90afe4d90eedccc3ee",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "0bc8bb1025d44f9eac65cf2f0bd85eea",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualize the node's output"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "03cac6ce0a224811a18836749e52b508",
+      "End": "a5a8cfed55394adab13022c7bbd85845",
+      "Id": "ea3f516df8774a738716962484022da8",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "31ad4a4a18e64a27968242ed2a7a6d66",
+      "End": "fb83682abaa04b90afe4d90eedccc3ee",
+      "Id": "ee4a39d8ef5640eca313ddb7b6a864ec",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "2.13",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.13.1.3887",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Id": "d81476ceeb344ef59223895cce8c2436",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Name": "Select Model Element",
+        "ShowGeometry": true,
+        "Excluded": false,
+        "X": 82.7999999999999,
+        "Y": 164.40000000000003
+      },
+      {
+        "Id": "b3157a3c16614bf8ae315643f895c71b",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Name": "Python Script",
+        "ShowGeometry": true,
+        "Excluded": false,
+        "X": 382.0,
+        "Y": 165.99999999999994
+      },
+      {
+        "Id": "451c3eee96114050942c6a9a790aec0b",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Name": "Watch",
+        "ShowGeometry": true,
+        "Excluded": false,
+        "X": 590.32828910371859,
+        "Y": 203.56146330617321
+      }
+    ],
+    "Annotations": [],
+    "X": -177.01400549118762,
+    "Y": 68.40632892387498,
+    "Zoom": 0.95404292488281262
+  }
+}

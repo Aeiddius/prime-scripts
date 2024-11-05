@@ -1,0 +1,308 @@
+{
+  "Uuid": "7bc36ab5-7ed9-4156-8ac1-09c73f4291ef",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "Room Cropbox",
+  "ElementResolver": {
+    "ResolutionMap": {
+      "Autodesk.Point": {
+        "Key": "Autodesk.DesignScript.Geometry.Point",
+        "Value": "ProtoGeometry.dll"
+      },
+      "Autodesk.DesignScript.Geometry.Point": {
+        "Key": "Autodesk.DesignScript.Geometry.Point",
+        "Value": "ProtoGeometry.dll"
+      },
+      "BoundingBox": {
+        "Key": "Autodesk.DesignScript.Geometry.BoundingBox",
+        "Value": "ProtoGeometry.dll"
+      },
+      "Autodesk.Geometry.Poin": {
+        "Key": "Autodesk.DesignScript.Geometry.Geometry",
+        "Value": "ProtoGeometry.dll"
+      },
+      "Autodesk.Geometry": {
+        "Key": "Autodesk.DesignScript.Geometry.Geometry",
+        "Value": "ProtoGeometry.dll"
+      },
+      "Autodesk.DesignScript.Geometry.Geometry.Poin": {
+        "Key": "Autodesk.DesignScript.Geometry.Geometry",
+        "Value": "ProtoGeometry.dll"
+      },
+      "CoordinateSystem": {
+        "Key": "Autodesk.DesignScript.Geometry.CoordinateSystem",
+        "Value": "ProtoGeometry.dll"
+      }
+    }
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "Dynamo.Nodes.DSModelElementSelection, DSRevitNodesUI",
+      "NodeType": "ExtensionNode",
+      "InstanceId": [
+        "bba92d85-a735-4273-bac4-a2038a6502bf-000c8787"
+      ],
+      "Id": "d7aba7247eff4e408b883068b0bcb225",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "a913edc025e74af9aa713b34f2b48ce1",
+          "Name": "Element",
+          "Description": "The selected elements.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Dimension\r\nfrom Autodesk.Revit.DB import Point\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ\r\n\r\n\r\nclr.AddReference('RevitServices')\r\nclr.AddReference('RevitAPI')\r\nclr.AddReference('RevitNodes')\r\nclr.AddReference('RevitAPIUI')\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\nview = UnwrapElement(IN[0])\r\nroom = UnwrapElement(IN[1])\r\n\r\ncrop_manager = view.GetCropRegionShapeManager()\r\ncrop_shape = crop_manager.GetCropShape()[0]\r\n\r\n\r\n\r\nmembers = dir(IN[1])\r\n\r\nTransactionManager.Instance.EnsureInTransaction(doc)\r\n\r\noptions = SpatialElementBoundaryOptions()\r\nboundary = room.GetBoundarySegments(options)\r\n\r\n\r\ncurves = []\r\n\r\n# Loop through the boundary segments\r\nfor segmentList in boundary:\r\n    for segment in segmentList:\r\n        curves.append(segment.GetCurve())\r\n\r\nloop = CurveLoop.Create(curves)\r\n\r\nTransactionManager.Instance.TransactionTaskDone()\r\n\r\nprint(curves)\r\n\r\n\r\n\r\nOUT = output.getvalue()\r\n",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "b4320c9de6f34c9eaaf804e6e2c54d30",
+      "Inputs": [
+        {
+          "Id": "05ed5a00d20947a98219f82ceb5c0292",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "200d2c7b293646c48024ad047567782e",
+          "Name": "IN[1]",
+          "Description": "Input #1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "584d26b18baa4ac8b25f4f28b0292717",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "919599fa50f2422b94871da495b510bd",
+      "Inputs": [
+        {
+          "Id": "5de5a7eb8e13463ba79f4ba646bbf543",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "aebd0889e591485ebc88f85a10bcd287",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualize the node's output"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Revit.Application.Document.Current",
+      "Id": "7d70292ab85c472e841c301a733ffcfe",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "c90f278b07134c65b7ed0d992f6c10f1",
+          "Name": "Document",
+          "Description": "Document",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Get the current document\n\nDocument.Current: Document"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Revit.Application.Document.ActiveView",
+      "Id": "1ada5c5e989e43a690f670dbef32da2d",
+      "Inputs": [
+        {
+          "Id": "1bf39ff4402945b583b01622af212e23",
+          "Name": "document",
+          "Description": "Revit.Application.Document",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "2e1159efa14042beb4f418d06aaf2424",
+          "Name": "View",
+          "Description": "View",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Get the active view for the document\n\nDocument.ActiveView: View"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "a913edc025e74af9aa713b34f2b48ce1",
+      "End": "200d2c7b293646c48024ad047567782e",
+      "Id": "18c19d5fdb8b41c2a4b2d819649217d3",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "584d26b18baa4ac8b25f4f28b0292717",
+      "End": "5de5a7eb8e13463ba79f4ba646bbf543",
+      "Id": "04934666d4ee41d1b199cc8f88f6142d",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "c90f278b07134c65b7ed0d992f6c10f1",
+      "End": "1bf39ff4402945b583b01622af212e23",
+      "Id": "0cf0d9073d564e73b9401d82b2c212e7",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "2e1159efa14042beb4f418d06aaf2424",
+      "End": "05ed5a00d20947a98219f82ceb5c0292",
+      "Id": "c6b1e4195bd54036a6e21affddf07f0f",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "2.13",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.13.1.3887",
+      "RunType": "Automatic",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Background Preview",
+      "EyeX": 22.186197280883789,
+      "EyeY": 22.4394588470459,
+      "EyeZ": 35.017929077148438,
+      "LookX": -18.878580093383789,
+      "LookY": -17.659749984741211,
+      "LookZ": -29.281803131103516,
+      "UpX": -0.13567169010639191,
+      "UpY": 0.96814769506454468,
+      "UpZ": -0.21043559908866882
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Name": "Select Model Element",
+        "ShowGeometry": true,
+        "Id": "d7aba7247eff4e408b883068b0bcb225",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -328.16239787535847,
+        "Y": 1160.8549606090205
+      },
+      {
+        "Name": "Python Script",
+        "ShowGeometry": true,
+        "Id": "b4320c9de6f34c9eaaf804e6e2c54d30",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 65.43309483723931,
+        "Y": 1042.7651123568792
+      },
+      {
+        "Name": "Watch",
+        "ShowGeometry": true,
+        "Id": "919599fa50f2422b94871da495b510bd",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 433.9445627726102,
+        "Y": 929.67088743722991
+      },
+      {
+        "Name": "Document.Current",
+        "ShowGeometry": true,
+        "Id": "7d70292ab85c472e841c301a733ffcfe",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -506.0016376918436,
+        "Y": 956.77565365390865
+      },
+      {
+        "Name": "Document.ActiveView",
+        "ShowGeometry": true,
+        "Id": "1ada5c5e989e43a690f670dbef32da2d",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -257.1732410996068,
+        "Y": 993.08527471289437
+      }
+    ],
+    "Annotations": [],
+    "X": -48.924272550406954,
+    "Y": -858.90652098113969,
+    "Zoom": 0.98449595227270725
+  }
+}

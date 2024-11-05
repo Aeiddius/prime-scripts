@@ -116,16 +116,16 @@ def start():
     
     base_view_id = ElementId(UnwrapElement(IN[1]))    
     model_detail_group = get_model_groups(base_view_id)
-    # model_curves = get_model_curves(model_detail_group)
+    model_curves = get_model_curves(model_detail_group)
 
 
-    # view_range = get_only_range(views, range)
-    # for view_group in view_range:
-    #     view = view_group[0]
-    #     num = view_group[1]
-    #     for group_name, curve in model_curves.items():
-    #         print(view, curve, group_name, num)
-    #         create_unit_views(view, curve, group_name, num, prefix)
+    view_range = get_only_range(views, range)
+    for view_group in view_range:
+        view = view_group[0]
+        num = view_group[1]
+        for group_name, curve in model_curves.items():
+            print(view, curve, group_name, num)
+            create_unit_views(view, curve, group_name, num, prefix)
 
 
 
