@@ -67,7 +67,10 @@ def start():
           for gpm in global_parameters:
               if gpm.Name == value_:
                 gpm_value = value_, gpm.GetValue().Value
-                parameter = element.GetParameters(parameter_name)[0]
+                parameter = element.GetParameters("Elevation from Level")[0]
+                parameter.SetValueString("3'")
+
+                print(parameter.AsValueString())
 
                 # set_parameter(element, "Elevation from Level", f"{gpm_value}'")
           # if comments_param.AsString() == "GB: Sconce":
