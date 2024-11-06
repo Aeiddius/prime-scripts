@@ -1,0 +1,151 @@
+{
+  "Uuid": "d3729592-126c-4263-96c7-1ee70d6622dc",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "Global Parameter",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, IndependentTag,BuiltInParameter, BuiltInCategory, ElementTransformUtils\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ, Group, ElementId\r\n\r\nclr.AddReference('System')\r\nfrom System.Collections.Generic import List\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nactive_view = doc.ActiveView\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n \r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\ndef get_element(id_str):\r\n   return doc.GetElement(ElementId(id_str))\r\n\r\n\r\nmode = UnwrapElement(IN[0])\r\n# 2680980\r\n\r\n\r\n\r\n@transaction  \r\ndef start():\r\n  global_parameters = FilteredElementCollector(doc).OfClass(GlobalParameter)\r\n\r\n  # Extract the names of all global parameters\r\n  for gpm in global_parameters:\r\n      print(gpm.GetValue().ToString())\r\n\r\nstart()\r\n\r\nOUT = output.getvalue()",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "fcc2dadb55e446e4b19b1ab5954aee9d",
+      "Inputs": [
+        {
+          "Id": "c966fc981cf84a8a81c4fbb929f0becf",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "44fbb0f5d8434007acceabf8f5f7ba80",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "31e4b45d26524e90bbfaed08606fb621",
+      "Inputs": [
+        {
+          "Id": "9f48e2cf5e0d462a826f164ad816bccf",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "4039ae904711421db39ecd5c054201b8",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualize the node's output"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "44fbb0f5d8434007acceabf8f5f7ba80",
+      "End": "9f48e2cf5e0d462a826f164ad816bccf",
+      "Id": "7e5b1504f09a483c8acdf6ac272587e1",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "2.13",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.13.1.3887",
+      "RunType": "Automatic",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Name": "Python Script",
+        "ShowGeometry": true,
+        "Id": "fcc2dadb55e446e4b19b1ab5954aee9d",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 464.58701784538368,
+        "Y": 204.1862486397624
+      },
+      {
+        "Name": "Watch",
+        "ShowGeometry": true,
+        "Id": "31e4b45d26524e90bbfaed08606fb621",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 740.839060740155,
+        "Y": 232.23057954296016
+      }
+    ],
+    "Annotations": [],
+    "X": -22.826152299199066,
+    "Y": -83.030308787553025,
+    "Zoom": 0.93181152849833082
+  }
+}

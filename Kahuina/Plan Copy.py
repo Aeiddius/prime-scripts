@@ -39,9 +39,7 @@ def print_member(obj):
 def get_element(id_str):
    return doc.GetElement(ElementId(id_str))
 
-def copy_to_plan(base_plan, target_level):
-  t_plan = get_element(target_level)
-  print(t_plan.Name)
+def copy_to_plan(base_plan, t_plan):
   elements_in_source_view = FilteredElementCollector(doc, base_plan.Id).WhereElementIsNotElementType().ToElements()
 
   processed_elems = []
@@ -60,11 +58,16 @@ def copy_to_plan(base_plan, target_level):
   copied_element = ElementTransformUtils.CopyElements(base_plan, filtered, t_plan, Transform.Identity, CopyPasteOptions())
   print("Copied Elements: ", copied_element)
 
+def delete_group_plan(t_plan):
+    elems = FilteredElementCollector(doc, t_plan.Id).OfCategory(BuiltInCategory.OST_IOSModelGroups).ToElements()
+    for i in elems:
+       doc.Delete(i.Id)
 
 
-proceed = UnwrapElement(IN[0])
-base_plan_id = UnwrapElement(IN[1])
-target_plans = UnwrapElement(IN[2])
+mode = UnwrapElement(IN[0])
+proceed = UnwrapElement(IN[1])
+base_plan_id = UnwrapElement(IN[2])
+target_plans = UnwrapElement(IN[3])
 
 # 2680980
 
@@ -79,10 +82,16 @@ exception_categories = [
 
 @transaction 
 def start():
-
+  print("Current Mode: ", mode)
   base_plan = get_element(base_plan_id)
-  for plan in target_plans:
-    copy_to_plan(base_plan, plan)
+  target_plans_elems = [get_element(e) for e in target_plans]
+  if mode == "Delete":
+    for tar_plan in target_plans_elems:
+      delete_group_plan(tar_plan)
+
+  elif mode == "Copy":
+    for tar_plan in target_plans_elems:
+      copy_to_plan(base_plan, tar_plan)
 
 
 if proceed:

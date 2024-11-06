@@ -2,7 +2,7 @@
   "Uuid": "d3729592-126c-4263-96c7-1ee70d6622dc",
   "IsCustomNode": false,
   "Description": "",
-  "Name": "Plan Copy",
+  "Name": "Group Model Duplicator",
   "ElementResolver": {
     "ResolutionMap": {}
   },
@@ -41,7 +41,7 @@
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
       "NodeType": "PythonScriptNode",
-      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, IndependentTag,BuiltInParameter, BuiltInCategory, ElementTransformUtils\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ, Group, ElementId\r\n\r\nclr.AddReference('System')\r\nfrom System.Collections.Generic import List\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nactive_view = doc.ActiveView\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n \r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\ndef copy_to_level(element, target_level):\r\n  transform = XYZ(0, 0, 0)\r\n  elementId = element.Id\r\n\r\n  copied_id = ElementTransformUtils.CopyElement(doc, elementId, transform)\r\n  copied_instance = doc.GetElement(copied_id[0])\r\n\r\n  print(\"ID: \", copied_id[0])\r\n  reference_level = copied_instance.GetParameters(\"Reference Level\")[0]\r\n  reference_level.Set(target_level.Id)\r\n\r\ndef get_element(id_str):\r\n   return doc.GetElement(ElementId(id_str))\r\n\r\n\r\nproceed = UnwrapElement(IN[0])\r\nbase_plan_id = UnwrapElement(IN[1])\r\ntarget_plans = UnwrapElement(IN[2])\r\n\r\n# 2680980\r\n\r\nexception_categories = [\r\n   int(BuiltInCategory.OST_RvtLinks),\r\n   int(BuiltInCategory.OST_Grids),\r\n   int(BuiltInCategory.OST_SectionBox),\r\n   int(BuiltInCategory.OST_Cameras),\r\n   int(BuiltInCategory.OST_Elev),\r\n   int(BuiltInCategory.OST_Viewers),\r\n]\r\n\r\n@transaction \r\ndef start():\r\n\r\n  base_plan = get_element(base_plan_id)\r\n  t_plan = get_element(target_plans[0])\r\n  elements_in_source_view = FilteredElementCollector(doc, base_plan.Id).WhereElementIsNotElementType().ToElements()\r\n\r\n  processed_elems = []\r\n\r\n  print(\"View: \", t_plan.GetPrimaryViewId())\r\n\r\n  for e in elements_in_source_view:\r\n    category = e.Category\r\n\r\n    if not category or (category and category.Id.IntegerValue in exception_categories):\r\n      continue\r\n    \r\n    processed_elems.append(e.Id)\r\n    print(f'[{e.Name}], [{e.Id}]')\r\n\r\n  # print(base_plan, t_plan)\r\n  filtered = List[ElementId](processed_elems)\r\n\r\n  copied_element = ElementTransformUtils.CopyElements(base_plan, filtered, t_plan, Transform.Identity, CopyPasteOptions())\r\n  print(\"Copied Elements: \", copied_element)\r\n\r\n\r\nif proceed:\r\n  print(\"Starting Script\")\r\n  start()\r\nelse:\r\n  print(\"Script not enabled\")\r\n\r\nOUT = output.getvalue()",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, IndependentTag,BuiltInParameter, BuiltInCategory, ElementTransformUtils\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ, Group, ElementId\r\n\r\nclr.AddReference('System')\r\nfrom System.Collections.Generic import List\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nactive_view = doc.ActiveView\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n \r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\ndef get_element(id_str):\r\n   return doc.GetElement(ElementId(id_str))\r\n\r\ndef copy_to_plan(base_plan, t_plan):\r\n  elements_in_source_view = FilteredElementCollector(doc, base_plan.Id).WhereElementIsNotElementType().ToElements()\r\n\r\n  processed_elems = []\r\n\r\n  for e in elements_in_source_view:\r\n    category = e.Category\r\n\r\n    if not category or (category and category.Id.IntegerValue in exception_categories):\r\n      continue\r\n    \r\n    processed_elems.append(e.Id)\r\n    print(f'[{e.Name}], [{e.Id}]')\r\n\r\n  filtered = List[ElementId](processed_elems)\r\n\r\n  copied_element = ElementTransformUtils.CopyElements(base_plan, filtered, t_plan, Transform.Identity, CopyPasteOptions())\r\n  print(\"Copied Elements: \", copied_element)\r\n\r\ndef delete_group_plan(t_plan):\r\n    elems = FilteredElementCollector(doc, t_plan.Id).OfCategory(BuiltInCategory.OST_IOSModelGroups).ToElements()\r\n    for i in elems:\r\n       doc.Delete(i.Id)\r\n\r\n\r\nmode = UnwrapElement(IN[0])\r\nproceed = UnwrapElement(IN[1])\r\nbase_plan_id = UnwrapElement(IN[2])\r\ntarget_plans = UnwrapElement(IN[3])\r\n\r\n# 2680980\r\n\r\nexception_categories = [\r\n   int(BuiltInCategory.OST_RvtLinks),\r\n   int(BuiltInCategory.OST_Grids),\r\n   int(BuiltInCategory.OST_SectionBox),\r\n   int(BuiltInCategory.OST_Cameras),\r\n   int(BuiltInCategory.OST_Elev),\r\n   int(BuiltInCategory.OST_Viewers),\r\n]\r\n\r\n@transaction \r\ndef start():\r\n  print(\"Current Mode: \", mode)\r\n  base_plan = get_element(base_plan_id)\r\n  target_plans_elems = [get_element(e) for e in target_plans]\r\n  if mode == \"Delete\":\r\n    for tar_plan in target_plans_elems:\r\n      delete_group_plan(tar_plan)\r\n\r\n  elif mode == \"Copy\":\r\n    for tar_plan in target_plans_elems:\r\n      copy_to_plan(base_plan, tar_plan)\r\n\r\n\r\nif proceed:\r\n  print(\"Starting Script\")\r\n  start()\r\nelse:\r\n  print(\"Script not enabled\")\r\n\r\nOUT = output.getvalue()",
       "Engine": "CPython3",
       "VariableInputPorts": true,
       "Id": "fda493ea90a9487684efde4a19db534c",
@@ -68,6 +68,15 @@
           "Id": "9f7b33dd695b4d82919b81ebae9bd6ca",
           "Name": "IN[2]",
           "Description": "Input #2",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "12a4f7bb4b6546a3a9a6cc667187de6d",
+          "Name": "IN[3]",
+          "Description": "Input #3",
           "UsingDefaultValue": false,
           "Level": 2,
           "UseLevels": false,
@@ -120,7 +129,7 @@
     {
       "ConcreteType": "CoreNodeModels.Input.BoolSelector, CoreNodeModels",
       "NodeType": "BooleanInputNode",
-      "InputValue": true,
+      "InputValue": false,
       "Id": "4c643442288f4851a16977db503a19fc",
       "Inputs": [],
       "Outputs": [
@@ -344,19 +353,48 @@
       ],
       "Replication": "Disabled",
       "Description": "Allows for DesignScript code to be authored directly"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "\"Copy\";\n\"Delete\";",
+      "Id": "e61562491fac453e80e402385c75e078",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "b7e2e9e4cf0040c389d22a14d95546b4",
+          "Name": "",
+          "Description": "Value of expression at line 1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "500ce0523fe24435a5dce1c86163b72c",
+          "Name": "",
+          "Description": "Value of expression at line 2",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows for DesignScript code to be authored directly"
     }
   ],
   "Connectors": [
     {
       "Start": "c22e46e3aa5e484d98995be43e8f9ed0",
-      "End": "4ce5ff743dc74ae493575b4962c3482b",
-      "Id": "a07ee67358634ed4b4c3958350269c32",
+      "End": "9f7b33dd695b4d82919b81ebae9bd6ca",
+      "Id": "172016c1eda943f793c7f77fb5e785d8",
       "IsHidden": "False"
     },
     {
       "Start": "fa036ea10b214a0faf1ef4ea022cd448",
-      "End": "9f7b33dd695b4d82919b81ebae9bd6ca",
-      "Id": "3421a3cedc2244149b60665fa80f7204",
+      "End": "12a4f7bb4b6546a3a9a6cc667187de6d",
+      "Id": "78b3f7084db04e7786045e4be5991286",
       "IsHidden": "False"
     },
     {
@@ -367,8 +405,8 @@
     },
     {
       "Start": "125ebcaf48484fdda671cd3139ffd8eb",
-      "End": "bee3aa5ba5e84e3ebf816afc6c5b95b6",
-      "Id": "f917adea4a5742489c1e96c1ec32360a",
+      "End": "4ce5ff743dc74ae493575b4962c3482b",
+      "Id": "ba76c5052f72413ca2d98a0b49eba72e",
       "IsHidden": "False"
     },
     {
@@ -405,6 +443,12 @@
       "Start": "a28d0bf403094585a64cdea355aecc55",
       "End": "24a2748ef1744c6f8ef14ed4d8ccfa99",
       "Id": "dd891b5aa3e24e698a3482ec67e69e0b",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "b7e2e9e4cf0040c389d22a14d95546b4",
+      "End": "bee3aa5ba5e84e3ebf816afc6c5b95b6",
+      "Id": "279292b8f80d49d7b7be3be23839dad4",
       "IsHidden": "False"
     }
   ],
@@ -458,11 +502,11 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 207.0,
-        "Y": 89.0
+        "X": 53.700123027326526,
+        "Y": 85.167503075683157
       },
       {
-        "Name": "Python Script",
+        "Name": "Plan Copy.py",
         "ShowGeometry": true,
         "Id": "fda493ea90a9487684efde4a19db534c",
         "IsSetAsInput": false,
@@ -478,18 +522,18 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 1028.6617538887854,
-        "Y": 191.43116579897324
+        "X": 989.17754437845042,
+        "Y": 93.817425620644912
       },
       {
-        "Name": "Boolean",
+        "Name": "Proceed?",
         "ShowGeometry": true,
         "Id": "4c643442288f4851a16977db503a19fc",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 485.76735720902866,
-        "Y": -96.528685649828844
+        "X": 385.16431294571169,
+        "Y": 13.655600924280236
       },
       {
         "Name": "List.Clean",
@@ -522,7 +566,7 @@
         "Y": 792.98576659920172
       },
       {
-        "Name": "Level Printer",
+        "Name": "Level Printer.py",
         "ShowGeometry": true,
         "Id": "8b800cc5e0c84cb6ade8cf266d48a25a",
         "IsSetAsInput": false,
@@ -560,6 +604,16 @@
         "Excluded": false,
         "X": 505.70364397837557,
         "Y": 892.66523613701179
+      },
+      {
+        "Name": "Mode",
+        "ShowGeometry": true,
+        "Id": "e61562491fac453e80e402385c75e078",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 451.4317181812288,
+        "Y": -158.897129687202
       }
     ],
     "Annotations": [
@@ -583,13 +637,13 @@
         "Height": 328.15473077058004,
         "FontSize": 36.0,
         "InitialTop": 1157.1368859463516,
-        "InitialHeight": 285.15473077058004,
+        "InitialHeight": 268.15473077058004,
         "TextblockHeight": 63.0,
         "Background": "#FFC1D676"
       }
     ],
-    "X": -632.24811972892087,
-    "Y": -92.638978823754854,
-    "Zoom": 0.91641321937535225
+    "X": 457.36945908399827,
+    "Y": 139.17218303036771,
+    "Zoom": 0.42731131081167661
   }
 }
