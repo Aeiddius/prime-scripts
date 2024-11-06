@@ -11,8 +11,8 @@
   "Nodes": [
     {
       "ConcreteType": "DSRevitNodesUI.Levels, DSRevitNodesUI",
-      "SelectedIndex": 0,
-      "SelectedString": "1st Floor",
+      "SelectedIndex": 42,
+      "SelectedString": "LEVEL 4A",
       "NodeType": "ExtensionNode",
       "Id": "d2c8d38c69cf41efbabb859980b4ba7e",
       "Inputs": [],
@@ -62,7 +62,7 @@
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
       "NodeType": "PythonScriptNode",
-      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Dimension, ElementTransformUtils\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ\r\n\r\n\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n \r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\n@transaction \r\ndef start():\r\n  target_levels = UnwrapElement(IN[1])\r\n  t_level = target_levels[0]\r\n  print(t_level.Id)\r\n  \r\n  # Fliter Groups\r\n  elements = UnwrapElement(IN[0])\r\n  group = []\r\n  for e in elements:\r\n    if isinstance(e, Group):\r\n      group.append(e)\r\n   \r\n   \r\n  # Iterate through groups\r\n  for grp in group:\r\n    grp_elements = grp.GetMemberIds()\r\n    elems = [doc.GetElement(e) for e in grp_elements]\r\n    for e in elems:\r\n      transform = e.Location.Point\r\n      elementId = e.Id\r\n      # params = e.GetParameters()\r\n      # print(params)\r\n      # print(elementId)\r\n      \r\n\r\n      copied_id = ElementTransformUtils.CopyElement(doc, elementId, transform)\r\n      copied_instance = doc.GetElement(copied_id[0])\r\n      print(copied_id[0])\r\n      schedule_level = copied_instance.GetParameters(\"Schedule Level\")[0]\r\n      elevation_level = copied_instance.GetParameters(\"Elevation from Level\")[0]\r\n      \r\n      print(schedule_level.AsString())\r\n      print(elevation_level.AsString())\r\n      schedule_level.Set(t_level.Id)\r\n      elevation_level.SetValueString(\"1000mm\")\r\n\r\n      # print(copied_instance)\r\n      # Element.SetParameterByName(copied_instance, \"Schedule Level\", t_level)\r\n\r\n      # copied_instance.Level = t_level\r\n\r\n      break\r\n    break\r\n\r\n  # print(target_levels)\r\n\r\nstart()\r\n\r\nOUT = output.getvalue()",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, IndependentTag,BuiltInParameter, BuiltInCategory, ElementTransformUtils\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ, Group\r\n\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n \r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\ndef copy_to_level(element, target_level):\r\n  transform = XYZ(0, 0, 0)\r\n  elementId = element.Id\r\n\r\n  copied_id = ElementTransformUtils.CopyElement(doc, elementId, transform)\r\n  copied_instance = doc.GetElement(copied_id[0])\r\n\r\n  print(\"ID: \", copied_id[0])\r\n  reference_level = copied_instance.GetParameters(\"Reference Level\")[0]\r\n  reference_level.Set(target_level.Id)\r\n\r\n\r\nproceed = UnwrapElement(IN[0])\r\nelements = UnwrapElement(IN[1])\r\ntarget_plans= UnwrapElement(IN[2])\r\ntarget_levels = UnwrapElement(IN[3])\r\n\r\n\r\n@transaction \r\ndef start():\r\n  t_level = target_levels[0] # Temporary\r\n  print(t_level.Id)\r\n  \r\n  # Fliter Groups\r\n  for e in elements:\r\n    if isinstance(e, Group):\r\n      copy_to_level(e, t_level)\r\n\r\n\r\n\r\n      # collector = FilteredElementCollector(doc).OfCategory(BuiltInCategory. OST_GenericAnnotation) \\\r\n      #                                            .WhereElementPropertyEquals(BuiltInParameter.LEVEL_PARAM, t_level.Id)\r\n      # # elems = [e for e in e.GetMemberIds() if isinstance(doc.GetElement(e), IndependentTag)]\r\n      \r\n      # print(collector)\r\n      # # for  i in e.GetMemberIds():\r\n      # #   a = doc.GetElement(i)\r\n      # #   print(a.Name)\r\n\r\n\r\n    break\r\n  \r\n   \r\nif proceed:\r\n  print(\"Starting Script\")\r\n  start()\r\nelse:\r\n  print(\"Script not enabled\")\r\n\r\nOUT = output.getvalue()",
       "Engine": "CPython3",
       "VariableInputPorts": true,
       "Id": "9ac2110baf3645d098701b32cc3145bd",
@@ -80,6 +80,24 @@
           "Id": "6c7f3cd133554f4f8a72806446a9b2fd",
           "Name": "IN[1]",
           "Description": "Input #1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "8d5907c88d564aed84d67c2e8ecee729",
+          "Name": "IN[2]",
+          "Description": "Input #2",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "7cb922bc9f4e4d5fa5e3e8f104828f35",
+          "Name": "IN[3]",
+          "Description": "Input #3",
           "UsingDefaultValue": false,
           "Level": 2,
           "UseLevels": false,
@@ -193,12 +211,12 @@
     {
       "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
       "NodeType": "CodeBlockNode",
-      "Code": "levels = [\n\t\"694\", // 2nd Floor\n\t\"1345358\", // 5th Floor\n\t\"1345666\", // 4th Floor\n\t\"1345676\", // Roof Deck\n\t\"1345678\" // 3rd Floor\n];",
+      "Code": "levels = [\n\t\"1362436\", // LEVEL 5A\n\t\"1362437\", // LEVEL 6A\n\t\"1362438\", // LEVEL 7A\n\t\"1362439\", // LEVEL 8A\n\t\"1362440\", // LEVEL 9A\n\t\"1362441\", // LEVEL 10A\n\t\"1362442\", // LEVEL 11A\n\t\"1362443\", // LEVEL 12A\n\t\"1362444\", // LEVEL 13A\n\t\"1362445\", // LEVEL 14A\n\t\"1362446\", // LEVEL 15A\n\t\"1362447\", // LEVEL 16A\n\t\"1362448\", // LEVEL 17A\n\t\"1362449\", // LEVEL 18A\n\t\"1362450\", // LEVEL 19A\n\t\"1362451\", // LEVEL 20A\n\t\"1362452\", // LEVEL 21A\n\t\"1362453\", // LEVEL 22A\n\t\"1362454\", // LEVEL 23A\n\t\"1362455\", // LEVEL 24A\n\t\"1362456\", // LEVEL 25A\n\t\"1362457\", // LEVEL 26A\n\t\"1362458\", // LEVEL 27A\n\t\"1362459\", // LEVEL 28A\n\t\"1362460\", // LEVEL 29A\n\t\"1362461\", // LEVEL 30A\n\t\"1362462\" // LEVEL 31A\n];",
       "Id": "c64f29deac374d16b23711f302e13b8f",
       "Inputs": [],
       "Outputs": [
         {
-          "Id": "189916397fa249c785387ba9a6b18539",
+          "Id": "10b0791de613416a8640a750a08adedb",
           "Name": "",
           "Description": "levels",
           "UsingDefaultValue": false,
@@ -213,7 +231,7 @@
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
       "NodeType": "PythonScriptNode",
-      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Dimension\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n \r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\n\r\ndef  level_printer():\r\n  # Get all levels in the document\r\n  collector = FilteredElementCollector(doc).OfClass(Level)\r\n  levels = collector.ToElements()\r\n\r\n  for level in levels:\r\n      lvl_name = level.Name\r\n      lvl_id = level.Id.ToString()\r\n      print(f'\"{lvl_id}\" # {lvl_name}, ')\r\n\r\n\r\n@transaction\r\ndef start():\r\n  level_printer()\r\n\r\nstart()\r\n\r\nOUT = output.getvalue()",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import ViewType\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Dimension\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ, Level\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\nresult = []\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n \r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\ndef get_element_via_parameter(elements, parameter_name, parameter_value):\r\n    result = []\r\n    for el in elements:\r\n        param_ViewType = el.GetParameters(parameter_name)[0]\r\n        if param_ViewType.AsValueString() == parameter_value:\r\n            result.append(el)\r\n            continue\r\n    return result\r\n\r\n\r\ndef get_all_view_type(elements, view_type):\r\n    result = []\r\n    for el in elements:\r\n        if el.ViewType == view_type:\r\n            result.append(el)\r\n    return result\r\n\r\nplan_dict = {\r\n    \"Floor Plan\": ViewType.FloorPlan,\r\n    \"Ceiling Plan\": ViewType.CeilingPlan\r\n}\r\n\r\nfamily_dict = {\r\n    \"Floor Plan\": ViewFamily.FloorPlan,\r\n    \"Ceiling Plan\": ViewFamily.CeilingPlan\r\n}\r\n\r\nto_print = UnwrapElement(IN[0])\r\nelements = UnwrapElement(IN[1])\r\n\r\n@transaction\r\ndef start():\r\n  target_levels = UnwrapElement(IN[0])\r\n\r\n  print(f\"To print: {to_print}\\n\")\r\n  if to_print == \"Level\":\r\n    # Get all levels in the document\r\n    collector = FilteredElementCollector(doc).OfClass(Level)\r\n    levels = collector.ToElements()\r\n\r\n    # Create a list of level names\r\n    for level in levels:\r\n      print(f'\"{level.Id.ToString()}\", // {level.Name}')\r\n\r\n  # Print all plan\r\n  elif to_print == \"Plan\":\r\n    discipline_type = \"Electrical\"\r\n    plan_type = \"Ceiling Plan\"\r\n    elem_discipline = get_element_via_parameter(elements, \"Discipline\", discipline_type)\r\n    elem_plan = get_all_view_type(elem_discipline, plan_dict[plan_type])\r\n    for plan in elem_plan:\r\n      print(f'\"{plan.Id}\", // {plan.Name}')\r\n\r\n\r\nstart()\r\n\r\nOUT = result\r\nOUT = output.getvalue()",
       "Engine": "CPython3",
       "VariableInputPorts": true,
       "Id": "51eee1a5183449ea8b1b41e1be5e883b",
@@ -222,6 +240,15 @@
           "Id": "da281a05f4434ef5a51c64eff76017f6",
           "Name": "IN[0]",
           "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "4ae107aba5714e619b185786618b46ac",
+          "Name": "IN[1]",
+          "Description": "Input #1",
           "UsingDefaultValue": false,
           "Level": 2,
           "UseLevels": false,
@@ -270,6 +297,193 @@
       ],
       "Replication": "Disabled",
       "Description": "Visualize the node's output"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.BoolSelector, CoreNodeModels",
+      "NodeType": "BooleanInputNode",
+      "InputValue": true,
+      "Id": "0b880590590a4c8c9afe6e0ba033cf8b",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "cca8b5b416b9492e8ec228cecc67d7c1",
+          "Name": "",
+          "Description": "Boolean",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Selection between a true and false."
+    },
+    {
+      "ConcreteType": "DSRevitNodesUI.Categories, DSRevitNodesUI",
+      "SelectedIndex": 717,
+      "SelectedString": "OST_Views",
+      "NodeType": "ExtensionNode",
+      "Id": "4ba879c069714d489b1bddb9bc7f8687",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "d397782c400a4fcc83d2f919f66b7881",
+          "Name": "Category",
+          "Description": "The selected Category.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "All built-in categories."
+    },
+    {
+      "ConcreteType": "DSRevitNodesUI.ElementsOfCategory, DSRevitNodesUI",
+      "NodeType": "ExtensionNode",
+      "Id": "d9c2809bb347482b8e749b7efc4c2deb",
+      "Inputs": [
+        {
+          "Id": "33614e27940c4b5f8add6b23e13927fa",
+          "Name": "Category",
+          "Description": "The Category",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "7cfa6ca909a74490865ad48d408331d2",
+          "Name": "Elements",
+          "Description": "An element class.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Get all elements of the specified category from the model."
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "false;",
+      "Id": "86b35e37650b4807864ad97e1c372a41",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "a186f7e78e434b0c986ded369303d063",
+          "Name": "",
+          "Description": "Value of expression at line 1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows for DesignScript code to be authored directly"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "DSCore.List.Clean@var[]..[],bool",
+      "Id": "0808de5b7d504a5f8f00280e00e1398b",
+      "Inputs": [
+        {
+          "Id": "95ec1d7a93ea4ef788be70f97b548d9c",
+          "Name": "list",
+          "Description": "List containing nulls and empty sublists to clean\n\nvar[]..[]",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "509482232b0a4faeb746de257733704f",
+          "Name": "preserveIndices",
+          "Description": "Provide an option to preserve the indices of the data\n\nbool\nDefault value : true",
+          "UsingDefaultValue": true,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "14da009857ef4ffaacde44059f2717d7",
+          "Name": "list",
+          "Description": "List of transposed lists",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Cleans data of nulls and empty lists from a given list of arbitrary dimension\n\nList.Clean (list: var[]..[], preserveIndices: bool = true): var[]..[]"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "base_plan = \"2442306\";\n // LEVEL 4A;\n\nplans = [\n\t\"2442315\", // LEVEL 5A\n\t\"2442324\", // LEVEL 6A\n\t\"2442333\", // LEVEL 7A\n\t\"2442342\", // LEVEL 8A\n\t\"2442351\", // LEVEL 9A\n\t\"2442360\", // LEVEL 10A\n\t\"2442369\", // LEVEL 11A\n\t\"2442378\", // LEVEL 12A\n\t\"2442387\", // LEVEL 13A\n\t\"2442396\", // LEVEL 14A\n\t\"2442405\", // LEVEL 15A\n\t\"2442414\", // LEVEL 16A\n\t\"2442423\", // LEVEL 17A\n\t\"2442432\", // LEVEL 18A\n\t\"2442441\", // LEVEL 19A\n\t\"2442450\", // LEVEL 20A\n\t\"2442459\", // LEVEL 21A\n\t\"2442468\", // LEVEL 22A\n\t\"2442477\", // LEVEL 23A\n\t\"2442486\", // LEVEL 24A\n\t\"2442495\", // LEVEL 25A\n\t\"2442504\", // LEVEL 26A\n\t\"2442513\", // LEVEL 27A\n\t\"2442522\", // LEVEL 28A\n\t\"2442531\", // LEVEL 29A\n\t\"2442540\", // LEVEL 30A\n\t\"2442549\" // LEVEL 31A\n];",
+      "Id": "a8465862454d40d8b244aeac396d7c4a",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "1787f82d91cf41659da44e48643865d2",
+          "Name": "",
+          "Description": "base_plan",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "f55c8f8a8d6f49ee899db1fd493fcd22",
+          "Name": "",
+          "Description": "plans",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows for DesignScript code to be authored directly"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "\"Level\";\n\"Plan\";",
+      "Id": "ccddba86abde420981f3da70335feb46",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "0eb4997271d84da7a727980ccabda709",
+          "Name": "",
+          "Description": "Value of expression at line 1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "1b414b34f8194adcafb16a8f8716865d",
+          "Name": "",
+          "Description": "Value of expression at line 2",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows for DesignScript code to be authored directly"
     }
   ],
   "Connectors": [
@@ -281,8 +495,8 @@
     },
     {
       "Start": "277b7bd35725450893ce34ba6aea3575",
-      "End": "87c637acc7c543b497e58bf3a3158887",
-      "Id": "eeca3458a4c54f12aaca1fb0b5cd2efe",
+      "End": "6c7f3cd133554f4f8a72806446a9b2fd",
+      "Id": "30083a63d53b474f86e24a6293cf12bd",
       "IsHidden": "False"
     },
     {
@@ -299,20 +513,62 @@
     },
     {
       "Start": "a4d55d58b0b14960850ada5a11bc364a",
-      "End": "6c7f3cd133554f4f8a72806446a9b2fd",
-      "Id": "1d3f52b582ab4df38cc0369deb62619b",
+      "End": "7cb922bc9f4e4d5fa5e3e8f104828f35",
+      "Id": "051bb9a1ea1147debf2ffd6a6f902608",
       "IsHidden": "False"
     },
     {
-      "Start": "189916397fa249c785387ba9a6b18539",
+      "Start": "10b0791de613416a8640a750a08adedb",
       "End": "f0353e4cae2349b8a728e04ee048df0f",
-      "Id": "68a6404fedb94d908532d14466ddd178",
+      "Id": "6173ce1c2e1c479d94bac2ea554ac521",
       "IsHidden": "False"
     },
     {
       "Start": "fc2d5da027a9470b8cba216935cc5ddb",
       "End": "60c1f5e2e5ec4095a01d71e4e0d70139",
       "Id": "1d011afe4e6d44e8838f51fbd6afa7a3",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "cca8b5b416b9492e8ec228cecc67d7c1",
+      "End": "87c637acc7c543b497e58bf3a3158887",
+      "Id": "7ae4dce0ae254389acd681fe094e0243",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "d397782c400a4fcc83d2f919f66b7881",
+      "End": "33614e27940c4b5f8add6b23e13927fa",
+      "Id": "461daa193c4542c2b75e48565c612332",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "7cfa6ca909a74490865ad48d408331d2",
+      "End": "95ec1d7a93ea4ef788be70f97b548d9c",
+      "Id": "c17250ec4035437e9ac09c07b56ceb9f",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "a186f7e78e434b0c986ded369303d063",
+      "End": "509482232b0a4faeb746de257733704f",
+      "Id": "fc88261300884e8688fffe4e29d9e3bf",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "14da009857ef4ffaacde44059f2717d7",
+      "End": "4ae107aba5714e619b185786618b46ac",
+      "Id": "c9dad9c2fcdd48419d7e38fafe2bb6e9",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "f55c8f8a8d6f49ee899db1fd493fcd22",
+      "End": "8d5907c88d564aed84d67c2e8ecee729",
+      "Id": "9fd72278684a423096d98d4e984ef7ba",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "0eb4997271d84da7a727980ccabda709",
+      "End": "da281a05f4434ef5a51c64eff76017f6",
+      "Id": "de6b68f67ff3472081819ca00b5f34b8",
       "IsHidden": "False"
     }
   ],
@@ -360,14 +616,14 @@
     "ConnectorPins": [],
     "NodeViews": [
       {
-        "Name": "Levels",
+        "Name": "Base Level",
         "ShowGeometry": true,
         "Id": "d2c8d38c69cf41efbabb859980b4ba7e",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": -127.26354794985861,
-        "Y": 203.70800071703803
+        "X": 169.59824598006179,
+        "Y": -167.09077148154284
       },
       {
         "Name": "All Elements at Level",
@@ -376,18 +632,18 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 289.5378549307701,
-        "Y": 90.520916850462868
+        "X": 444.10251033393604,
+        "Y": -184.21734431915689
       },
       {
-        "Name": "Python Script",
+        "Name": "Level Copy",
         "ShowGeometry": true,
         "Id": "9ac2110baf3645d098701b32cc3145bd",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 788.92343325558772,
-        "Y": 296.36856116422763
+        "X": 887.50511484842264,
+        "Y": 298.73028879296623
       },
       {
         "Name": "Watch",
@@ -396,8 +652,8 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 1058.5544075922846,
-        "Y": 106.61289158877042
+        "X": 1165.7547375931908,
+        "Y": 71.3272858407944
       },
       {
         "Name": "Target Levels Get",
@@ -426,8 +682,8 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": -299.417391344378,
-        "Y": 427.55969110092121
+        "X": -395.7715784303968,
+        "Y": 427.36160076832982
       },
       {
         "Name": "Level Printer",
@@ -436,8 +692,8 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": -141.78203310214803,
-        "Y": 779.15588670140619
+        "X": 268.0825427953921,
+        "Y": 1147.0131832206719
       },
       {
         "Name": "Watch",
@@ -446,13 +702,108 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 97.434359510129184,
-        "Y": 820.26638038847432
+        "X": 544.68455235062322,
+        "Y": 1026.3181469068952
+      },
+      {
+        "Name": "Proceed?",
+        "ShowGeometry": true,
+        "Id": "0b880590590a4c8c9afe6e0ba033cf8b",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 780.26227988451046,
+        "Y": -138.55731405520373
+      },
+      {
+        "Name": "Categories",
+        "ShowGeometry": true,
+        "Id": "4ba879c069714d489b1bddb9bc7f8687",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -917.71631663814628,
+        "Y": 1401.7072465625224
+      },
+      {
+        "Name": "All Elements of Category",
+        "ShowGeometry": true,
+        "Id": "d9c2809bb347482b8e749b7efc4c2deb",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -557.05503821153582,
+        "Y": 1397.7331225370892
+      },
+      {
+        "Name": "Code Block",
+        "ShowGeometry": true,
+        "Id": "86b35e37650b4807864ad97e1c372a41",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -235.08930783408789,
+        "Y": 1513.6239970246345
+      },
+      {
+        "Name": "List.Clean",
+        "ShowGeometry": true,
+        "Id": "0808de5b7d504a5f8f00280e00e1398b",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -57.946726424474832,
+        "Y": 1390.4692662540481
+      },
+      {
+        "Name": "Target Plans (Ceiling)",
+        "ShowGeometry": true,
+        "Id": "a8465862454d40d8b244aeac396d7c4a",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -396.11431801821237,
+        "Y": -220.14548782694115
+      },
+      {
+        "Name": "Which to Print?",
+        "ShowGeometry": true,
+        "Id": "ccddba86abde420981f3da70335feb46",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -47.161006239951973,
+        "Y": 1125.9976164447114
       }
     ],
-    "Annotations": [],
-    "X": -400.44552908645437,
-    "Y": -29.345826148390586,
-    "Zoom": 0.9669083797801904
+    "Annotations": [
+      {
+        "Id": "4e682008e9b440f1960f89e216b43478",
+        "Title": "Get All Elements",
+        "DescriptionText": "<Double click here to edit group description>",
+        "IsExpanded": true,
+        "WidthAdjustment": 0.0,
+        "HeightAdjustment": 0.0,
+        "Nodes": [
+          "d9c2809bb347482b8e749b7efc4c2deb",
+          "86b35e37650b4807864ad97e1c372a41",
+          "0808de5b7d504a5f8f00280e00e1398b",
+          "4ba879c069714d489b1bddb9bc7f8687"
+        ],
+        "HasNestedGroups": false,
+        "Left": -927.71631663814628,
+        "Top": 1317.4692662540481,
+        "Width": 1116.7695902136716,
+        "Height": 328.15473077058641,
+        "FontSize": 36.0,
+        "InitialTop": 1390.4692662540481,
+        "InitialHeight": 285.154730770586,
+        "TextblockHeight": 63.0,
+        "Background": "#FFC1D676"
+      }
+    ],
+    "X": -49.104347963848596,
+    "Y": 250.7140528975944,
+    "Zoom": 0.64134512329675974
   }
 }
