@@ -40,6 +40,10 @@ def get_element(id_str):
    return doc.GetElement(ElementId(id_str))
 
 
+def set_parameter(element, parameter_name, new_value):
+    parameter = element.GetParameters(parameter_name)[0]
+    parameter.SetValueString(new_value)
+
 mode = UnwrapElement(IN[0])
 # 2680980
 
@@ -56,19 +60,24 @@ def start():
   for element in collector:
       param = element.LookupParameter("Comments")
       if not param: continue
+
       value = param.AsValueString()
-      if param and value:
-          print(param.AsValueString())
-      #     x = comments_param.AsString()
-      #     print(x)
+      if param and value and value.startswith("GB: "):
+          value_ = value.replace("GB: ", "").strip()
+          for gpm in global_parameters:
+              if gpm.Name == value_:
+                gpm_value = value_, gpm.GetValue().Value
+                parameter = element.GetParameters(parameter_name)[0]
+
+                # set_parameter(element, "Elevation from Level", f"{gpm_value}'")
           # if comments_param.AsString() == "GB: Sconce":
           #     # If it matches, add the element to the list
           #     matching_elements.append(element)
 
   # Extract the names of all global parameters
-  for gpm in global_parameters:
-      value = gpm.GetValue().Value
-      print(gpm.Name, value)
+  # for gpm in global_parameters:
+  #     value = gpm.GetValue().Value
+  #     print(gpm.Name)
 
 start()
 
