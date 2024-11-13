@@ -61,13 +61,15 @@ family_dict = {
 }
 
 to_print = UnwrapElement(IN[0])
-elements = UnwrapElement(IN[1])
+view_plan = UnwrapElement(IN[1])
+discipline = UnwrapElement(IN[2])
+elements = UnwrapElement(IN[3])
 
 @transaction
 def start():
   target_levels = UnwrapElement(IN[0])
 
-  print(f"To print: {to_print}\n")
+  print(f"To print: {to_print} {view_plan}\n")
   if to_print == "Level":
     # Get all levels in the document
     collector = FilteredElementCollector(doc).OfClass(Level)
@@ -79,8 +81,8 @@ def start():
 
   # Print all plan
   elif to_print == "Plan":
-    discipline_type = "Electrical"
-    plan_type = "Ceiling Plan"
+    discipline_type = discipline
+    plan_type = view_plan
     elem_discipline = get_element_via_parameter(elements, "Discipline", discipline_type)
     elem_plan = get_all_view_type(elem_discipline, plan_dict[plan_type])
     for plan in elem_plan:

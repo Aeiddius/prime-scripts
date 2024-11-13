@@ -62,26 +62,18 @@ def start():
       if not param: continue
 
       value = param.AsValueString()
-      if param and value and value.startswith("GB: "):
-          value_ = value.replace("GB: ", "").strip()
+      if not param.IsReadOnly and value and value.startswith("GB: "):
+          param_name = value.replace("GB:", "").strip()
+
           for gpm in global_parameters:
-              if gpm.Name == value_:
-                gpm_value = value_, gpm.GetValue().Value
-                parameter = element.GetParameters("Elevation from Level")[0]
-                parameter.SetValueString("3'")
+              if gpm.Name == param_name:
+                gpm_value = gpm.GetValue().Value
+                parameter = element.LookupParameter("Elevation from Level")
 
-                print(parameter.AsValueString())
+                if param.IsReadOnly: continue
+                parameter.Set(gpm_value)
 
-                # set_parameter(element, "Elevation from Level", f"{gpm_value}'")
-          # if comments_param.AsString() == "GB: Sconce":
-          #     # If it matches, add the element to the list
-          #     matching_elements.append(element)
-
-  # Extract the names of all global parameters
-  # for gpm in global_parameters:
-  #     value = gpm.GetValue().Value
-  #     print(gpm.Name)
-
+                print("Set: ", element.Name, element.Id, parameter.AsValueString())
 start()
 
 OUT = output.getvalue()

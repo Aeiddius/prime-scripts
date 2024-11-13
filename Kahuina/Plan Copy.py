@@ -5,11 +5,11 @@ from io import StringIO
 import Autodesk
 import RevitServices
 from Autodesk.Revit.DB import *
-from Autodesk.Revit.DB import FilteredElementCollector, IndependentTag,BuiltInParameter, BuiltInCategory, ElementTransformUtils
+from Autodesk.Revit.DB import FilteredElementCollector, IndependentTag,BuiltInParameter, BuiltInCategory, ElementTransformUtils, FamilyInstance
 
 from RevitServices.Persistence import DocumentManager
 from RevitServices.Transactions import TransactionManager
-from Autodesk.Revit.DB import Dimension, Line, XYZ, Group, ElementId
+from Autodesk.Revit.DB import Dimension, Line, XYZ, Group, ElementId, Electrical
 
 clr.AddReference('System')
 from System.Collections.Generic import List
@@ -31,53 +31,84 @@ def transaction(func):
             func(*args, **kwargs)
             TransactionManager.Instance.TransactionTaskDone()
     return wrapper
- 
+
 def print_member(obj):
   for i in dir(obj):
       print(i)
 
 def get_element(id_str):
-   return doc.GetElement(ElementId(id_str))
+  return doc.GetElement(ElementId(id_str))
 
-def copy_to_plan(base_plan, t_plan):
-  elements_in_source_view = FilteredElementCollector(doc, base_plan.Id).WhereElementIsNotElementType().ToElements()
+def copy_to_plan(base_plan, t_plan, collection_elements, options_dict):
 
-  processed_elems = []
+  # Copy the Elemetns
+  copied_ids = ElementTransformUtils.CopyElements(base_plan, collection_elements, t_plan, Transform.Identity, CopyPasteOptions())
+  copied_elements = [doc.GetElement(cid) for cid in copied_ids]
+  
+  for celem in copied_elements:
+    if isinstance(celem, FamilyInstance): 
+      
+      parameter = celem.LookupParameter("Schedule Level")
+      if parameter and not parameter.IsReadOnly:
+        parameter.Set(t_plan.GenLevel.Id)
 
-  for e in elements_in_source_view:
-    category = e.Category
+    # Panel reName
+    if options_dict["prename"] == true:
+      if isinstance(celem, FamilyInstance) and celem.Category.Id.IntegerValue == int(BuiltInCategory.OST_ElectricalEquipment):
+        print(celem.Name, type(celem))
 
-    if not category or (category and category.Id.IntegerValue in exception_categories):
-      continue
-    
-    processed_elems.append(e.Id)
-    print(f'[{e.Name}], [{e.Id}]')
+        param_panel = celem.LookupParameter("Comments")
+        param_panel_value = param_panel.AsValueString()
+        if param_panel_value == "Panel":
+          param_panel_name = celem.LookupParameter("Panel Name")
+          raw_name = param_panel_name.AsValueString().strip().split(" ", 1) #    ["A2", "[Unit 401]"]
+          real_pname = raw_name[0]                               #     "A2"
+          unit_no = raw_name[1].replace("]", "").replace("[", "").split(" ")[1].replace("4", "", 1) #     "01"
+          
+          floor_no = t_plan.Name.replace("LEVEL", "").strip()[0:-1]
+          final_name = f'{real_pname} [UNIT {floor_no}{unit_no}]'
+          print("St: ", final_name)
+          param_panel_name.Set(final_name)
 
-  filtered = List[ElementId](processed_elems)
+          celem.LookupParameter("Mark").Set(real_pname)
 
-  copied_element = ElementTransformUtils.CopyElements(base_plan, filtered, t_plan, Transform.Identity, CopyPasteOptions())
-  print("Copied Elements: ", copied_element)
+
+  group = doc.Create.NewGroup(List[ElementId](copied_ids))
+  group.GroupType.Name = f"{t_plan.Name} Models"
+
 
 def delete_group_plan(t_plan):
-    elems = FilteredElementCollector(doc, t_plan.Id).OfCategory(BuiltInCategory.OST_IOSModelGroups).ToElements()
-    for i in elems:
-       doc.Delete(i.Id)
+  elems = FilteredElementCollector(doc, t_plan.Id).OfCategory(BuiltInCategory.OST_IOSModelGroups).ToElements()
+  group_types = []
+  for grp in elems:
+    group_types.append(grp.GroupType)
+    doc.Delete(grp.Id)
+  
+  for e in group_types:
+    doc.Delete(e.Id)
 
+def get_options(options):
+  diction = {}
+  diction["prename"] = options[0]
+  return diction
 
 mode = UnwrapElement(IN[0])
 proceed = UnwrapElement(IN[1])
 base_plan_id = UnwrapElement(IN[2])
 target_plans = UnwrapElement(IN[3])
+options = UnwrapElement(IN[4])
 
 # 2680980
 
 exception_categories = [
-   int(BuiltInCategory.OST_RvtLinks),
-   int(BuiltInCategory.OST_Grids),
-   int(BuiltInCategory.OST_SectionBox),
-   int(BuiltInCategory.OST_Cameras),
-   int(BuiltInCategory.OST_Elev),
-   int(BuiltInCategory.OST_Viewers),
+  int(BuiltInCategory.OST_RvtLinks),
+  int(BuiltInCategory.OST_Grids),
+  int(BuiltInCategory.OST_SectionBox),
+  int(BuiltInCategory.OST_Cameras),
+  int(BuiltInCategory.OST_Elev),
+  int(BuiltInCategory.OST_Viewers),
+  int(BuiltInCategory.OST_Viewers),
+  int(BuiltInCategory.OST_IOSModelGroups)
 ]
 
 @transaction 
@@ -85,13 +116,35 @@ def start():
   print("Current Mode: ", mode)
   base_plan = get_element(base_plan_id)
   target_plans_elems = [get_element(e) for e in target_plans]
-  if mode == "Delete":
+  options_dict = get_options(options)
+
+  # Delete
+  if mode == False:
     for tar_plan in target_plans_elems:
       delete_group_plan(tar_plan)
 
-  elif mode == "Copy":
+  # Copy
+  elif mode == True:
+    # Get All elements in base view plan
+    elements_source = FilteredElementCollector(doc, base_plan.Id).WhereElementIsNotElementType().ToElements()
+    filtered_elements = []
+
+    # Filter Elements
+    for e in elements_source:
+      category = e.Category
+
+      if not category or (category and category.Id.IntegerValue in exception_categories):
+        continue
+
+      filtered_elements.append(e.Id)
+
+
+    # Creat c# compatible list
+    collection = List[ElementId](filtered_elements)
+
+    # apply copy to every target plan
     for tar_plan in target_plans_elems:
-      copy_to_plan(base_plan, tar_plan)
+      copy_to_plan(base_plan, tar_plan, collection, options_dict)
 
 
 if proceed:

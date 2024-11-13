@@ -12,23 +12,23 @@
     {
       "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
       "NodeType": "CodeBlockNode",
-      "Code": "base_plan = \"2442306\";\n // LEVEL 4A;\n\nplans = [\n\t\"2442315\", // LEVEL 5A\n\t\"2442324\", // LEVEL 6A\n\t\"2442333\", // LEVEL 7A\n\t\"2442342\", // LEVEL 8A\n\t\"2442351\", // LEVEL 9A\n\t\"2442360\", // LEVEL 10A\n\t\"2442369\", // LEVEL 11A\n\t\"2442378\", // LEVEL 12A\n\t\"2442387\", // LEVEL 13A\n\t\"2442396\", // LEVEL 14A\n\t\"2442405\", // LEVEL 15A\n\t\"2442414\", // LEVEL 16A\n\t\"2442423\", // LEVEL 17A\n\t\"2442432\", // LEVEL 18A\n\t\"2442441\", // LEVEL 19A\n\t\"2442450\", // LEVEL 20A\n\t\"2442459\", // LEVEL 21A\n\t\"2442468\", // LEVEL 22A\n\t\"2442477\", // LEVEL 23A\n\t\"2442486\", // LEVEL 24A\n\t\"2442495\", // LEVEL 25A\n\t\"2442504\", // LEVEL 26A\n\t\"2442513\", // LEVEL 27A\n\t\"2442522\", // LEVEL 28A\n\t\"2442531\", // LEVEL 29A\n\t\"2442540\", // LEVEL 30A\n\t\"2442549\" // LEVEL 31A\n];",
+      "Code": "base_target = \"2442306\";\n // LEVEL 4A;\n\ntargets = [\n\t\"2442315\", // LEVEL 5A\n\t\"2442324\", // LEVEL 6A\n\t\"2442333\", // LEVEL 7A\n\t\"2442342\", // LEVEL 8A\n\t\"2442351\", // LEVEL 9A\n\t\"2442360\", // LEVEL 10A\n\t\"2442369\", // LEVEL 11A\n\t\"2442378\", // LEVEL 12A\n\t\"2442387\", // LEVEL 13A\n\t\"2442396\", // LEVEL 14A\n\t\"2442405\", // LEVEL 15A\n\t\"2442414\", // LEVEL 16A\n\t\"2442423\", // LEVEL 17A\n\t\"2442432\", // LEVEL 18A\n\t\"2442441\", // LEVEL 19A\n\t\"2442450\", // LEVEL 20A\n\t\"2442459\", // LEVEL 21A\n\t\"2442468\", // LEVEL 22A\n\t\"2442477\", // LEVEL 23A\n\t\"2442486\", // LEVEL 24A\n\t\"2442495\", // LEVEL 25A\n\t\"2442504\", // LEVEL 26A\n\t\"2442513\", // LEVEL 27A\n\t\"2442522\", // LEVEL 28A\n\t\"2442531\", // LEVEL 29A\n\t\"2442540\", // LEVEL 30A\n\t\"2442549\" // LEVEL 31A\n];",
       "Id": "1c6fb072aec74208811b5f7fdf626b80",
       "Inputs": [],
       "Outputs": [
         {
-          "Id": "c22e46e3aa5e484d98995be43e8f9ed0",
+          "Id": "7a97db1aa2dd4cf3bf9451365d5a8f44",
           "Name": "",
-          "Description": "base_plan",
+          "Description": "base_target",
           "UsingDefaultValue": false,
           "Level": 2,
           "UseLevels": false,
           "KeepListStructure": false
         },
         {
-          "Id": "fa036ea10b214a0faf1ef4ea022cd448",
+          "Id": "ad8fbf021fda418cb393058ea87b21e2",
           "Name": "",
-          "Description": "plans",
+          "Description": "targets",
           "UsingDefaultValue": false,
           "Level": 2,
           "UseLevels": false,
@@ -41,7 +41,7 @@
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
       "NodeType": "PythonScriptNode",
-      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, IndependentTag,BuiltInParameter, BuiltInCategory, ElementTransformUtils\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ, Group, ElementId\r\n\r\nclr.AddReference('System')\r\nfrom System.Collections.Generic import List\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nactive_view = doc.ActiveView\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n \r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\ndef get_element(id_str):\r\n   return doc.GetElement(ElementId(id_str))\r\n\r\ndef copy_to_plan(base_plan, t_plan):\r\n  elements_in_source_view = FilteredElementCollector(doc, base_plan.Id).WhereElementIsNotElementType().ToElements()\r\n\r\n  processed_elems = []\r\n\r\n  for e in elements_in_source_view:\r\n    category = e.Category\r\n\r\n    if not category or (category and category.Id.IntegerValue in exception_categories):\r\n      continue\r\n    \r\n    processed_elems.append(e.Id)\r\n    print(f'[{e.Name}], [{e.Id}]')\r\n\r\n  filtered = List[ElementId](processed_elems)\r\n\r\n  copied_element = ElementTransformUtils.CopyElements(base_plan, filtered, t_plan, Transform.Identity, CopyPasteOptions())\r\n  print(\"Copied Elements: \", copied_element)\r\n\r\ndef delete_group_plan(t_plan):\r\n    elems = FilteredElementCollector(doc, t_plan.Id).OfCategory(BuiltInCategory.OST_IOSModelGroups).ToElements()\r\n    for i in elems:\r\n       doc.Delete(i.Id)\r\n\r\n\r\nmode = UnwrapElement(IN[0])\r\nproceed = UnwrapElement(IN[1])\r\nbase_plan_id = UnwrapElement(IN[2])\r\ntarget_plans = UnwrapElement(IN[3])\r\n\r\n# 2680980\r\n\r\nexception_categories = [\r\n   int(BuiltInCategory.OST_RvtLinks),\r\n   int(BuiltInCategory.OST_Grids),\r\n   int(BuiltInCategory.OST_SectionBox),\r\n   int(BuiltInCategory.OST_Cameras),\r\n   int(BuiltInCategory.OST_Elev),\r\n   int(BuiltInCategory.OST_Viewers),\r\n]\r\n\r\n@transaction \r\ndef start():\r\n  print(\"Current Mode: \", mode)\r\n  base_plan = get_element(base_plan_id)\r\n  target_plans_elems = [get_element(e) for e in target_plans]\r\n  if mode == \"Delete\":\r\n    for tar_plan in target_plans_elems:\r\n      delete_group_plan(tar_plan)\r\n\r\n  elif mode == \"Copy\":\r\n    for tar_plan in target_plans_elems:\r\n      copy_to_plan(base_plan, tar_plan)\r\n\r\n\r\nif proceed:\r\n  print(\"Starting Script\")\r\n  start()\r\nelse:\r\n  print(\"Script not enabled\")\r\n\r\nOUT = output.getvalue()",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, IndependentTag,BuiltInParameter, BuiltInCategory, ElementTransformUtils, FamilyInstance\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ, Group, ElementId, Electrical\r\n\r\nclr.AddReference('System')\r\nfrom System.Collections.Generic import List\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nactive_view = doc.ActiveView\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n\r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\ndef get_element(id_str):\r\n  return doc.GetElement(ElementId(id_str))\r\n\r\ndef copy_to_plan(base_plan, t_plan, collection_elements, options_dict):\r\n\r\n  # Copy the Elemetns\r\n  copied_ids = ElementTransformUtils.CopyElements(base_plan, collection_elements, t_plan, Transform.Identity, CopyPasteOptions())\r\n  copied_elements = [doc.GetElement(cid) for cid in copied_ids]\r\n  \r\n  for celem in copied_elements:\r\n    if isinstance(celem, FamilyInstance): \r\n      \r\n      parameter = celem.LookupParameter(\"Schedule Level\")\r\n      if parameter and not parameter.IsReadOnly:\r\n        parameter.Set(t_plan.GenLevel.Id)\r\n\r\n    # Panel reName\r\n    if options_dict[\"prename\"] == true:\r\n      if isinstance(celem, FamilyInstance) and celem.Category.Id.IntegerValue == int(BuiltInCategory.OST_ElectricalEquipment):\r\n        print(celem.Name, type(celem))\r\n\r\n        param_panel = celem.LookupParameter(\"Comments\")\r\n        param_panel_value = param_panel.AsValueString()\r\n        if param_panel_value == \"Panel\":\r\n          param_panel_name = celem.LookupParameter(\"Panel Name\")\r\n          raw_name = param_panel_name.AsValueString().strip().split(\" \", 1) #    [\"A2\", \"[Unit 401]\"]\r\n          real_pname = raw_name[0]                               #     \"A2\"\r\n          unit_no = raw_name[1].replace(\"]\", \"\").replace(\"[\", \"\").split(\" \")[1].replace(\"4\", \"\", 1) #     \"01\"\r\n          \r\n          floor_no = t_plan.Name.replace(\"LEVEL\", \"\").strip()[0:-1]\r\n          final_name = f'{real_pname} [UNIT {floor_no}{unit_no}]'\r\n          print(\"St: \", final_name)\r\n          param_panel_name.Set(final_name)\r\n\r\n          celem.LookupParameter(\"Mark\").Set(real_pname)\r\n\r\n\r\n  group = doc.Create.NewGroup(List[ElementId](copied_ids))\r\n  group.GroupType.Name = f\"{t_plan.Name} Models\"\r\n\r\n\r\ndef delete_group_plan(t_plan):\r\n  elems = FilteredElementCollector(doc, t_plan.Id).OfCategory(BuiltInCategory.OST_IOSModelGroups).ToElements()\r\n  group_types = []\r\n  for grp in elems:\r\n    group_types.append(grp.GroupType)\r\n    doc.Delete(grp.Id)\r\n  \r\n  for e in group_types:\r\n    doc.Delete(e.Id)\r\n\r\ndef get_options(options):\r\n  diction = {}\r\n  diction[\"prename\"] = options[0]\r\n  return diction\r\n\r\nmode = UnwrapElement(IN[0])\r\nproceed = UnwrapElement(IN[1])\r\nbase_plan_id = UnwrapElement(IN[2])\r\ntarget_plans = UnwrapElement(IN[3])\r\noptions = UnwrapElement(IN[4])\r\n\r\n# 2680980\r\n\r\nexception_categories = [\r\n  int(BuiltInCategory.OST_RvtLinks),\r\n  int(BuiltInCategory.OST_Grids),\r\n  int(BuiltInCategory.OST_SectionBox),\r\n  int(BuiltInCategory.OST_Cameras),\r\n  int(BuiltInCategory.OST_Elev),\r\n  int(BuiltInCategory.OST_Viewers),\r\n  int(BuiltInCategory.OST_Viewers),\r\n  int(BuiltInCategory.OST_IOSModelGroups)\r\n]\r\n\r\n@transaction \r\ndef start():\r\n  print(\"Current Mode: \", mode)\r\n  base_plan = get_element(base_plan_id)\r\n  target_plans_elems = [get_element(e) for e in target_plans]\r\n  options_dict = get_options(options)\r\n\r\n  # Delete\r\n  if mode == False:\r\n    for tar_plan in target_plans_elems:\r\n      delete_group_plan(tar_plan)\r\n\r\n  # Copy\r\n  elif mode == True:\r\n    # Get All elements in base view plan\r\n    elements_source = FilteredElementCollector(doc, base_plan.Id).WhereElementIsNotElementType().ToElements()\r\n    filtered_elements = []\r\n\r\n    # Filter Elements\r\n    for e in elements_source:\r\n      category = e.Category\r\n\r\n      if not category or (category and category.Id.IntegerValue in exception_categories):\r\n        continue\r\n\r\n      filtered_elements.append(e.Id)\r\n\r\n\r\n    # Creat c# compatible list\r\n    collection = List[ElementId](filtered_elements)\r\n\r\n    # apply copy to every target plan\r\n    for tar_plan in target_plans_elems:\r\n      copy_to_plan(base_plan, tar_plan, collection, options_dict)\r\n\r\n\r\nif proceed:\r\n  print(\"Starting Script\")\r\n  start()\r\nelse:\r\n  print(\"Script not enabled\")\r\n\r\nOUT = output.getvalue()",
       "Engine": "CPython3",
       "VariableInputPorts": true,
       "Id": "fda493ea90a9487684efde4a19db534c",
@@ -77,6 +77,15 @@
           "Id": "12a4f7bb4b6546a3a9a6cc667187de6d",
           "Name": "IN[3]",
           "Description": "Input #3",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "35bfd9381e1848dda6000d001d1c5c51",
+          "Name": "IN[4]",
+          "Description": "Input #4",
           "UsingDefaultValue": false,
           "Level": 2,
           "UseLevels": false,
@@ -129,7 +138,7 @@
     {
       "ConcreteType": "CoreNodeModels.Input.BoolSelector, CoreNodeModels",
       "NodeType": "BooleanInputNode",
-      "InputValue": false,
+      "InputValue": true,
       "Id": "4c643442288f4851a16977db503a19fc",
       "Inputs": [],
       "Outputs": [
@@ -237,7 +246,7 @@
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
       "NodeType": "PythonScriptNode",
-      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import ViewType\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Dimension\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ, Level\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\nresult = []\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n \r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\ndef get_element_via_parameter(elements, parameter_name, parameter_value):\r\n    result = []\r\n    for el in elements:\r\n        param_ViewType = el.GetParameters(parameter_name)[0]\r\n        if param_ViewType.AsValueString() == parameter_value:\r\n            result.append(el)\r\n            continue\r\n    return result\r\n\r\n\r\ndef get_all_view_type(elements, view_type):\r\n    result = []\r\n    for el in elements:\r\n        if el.ViewType == view_type:\r\n            result.append(el)\r\n    return result\r\n\r\nplan_dict = {\r\n    \"Floor Plan\": ViewType.FloorPlan,\r\n    \"Ceiling Plan\": ViewType.CeilingPlan\r\n}\r\n\r\nfamily_dict = {\r\n    \"Floor Plan\": ViewFamily.FloorPlan,\r\n    \"Ceiling Plan\": ViewFamily.CeilingPlan\r\n}\r\n\r\nto_print = UnwrapElement(IN[0])\r\nelements = UnwrapElement(IN[1])\r\n\r\n@transaction\r\ndef start():\r\n  target_levels = UnwrapElement(IN[0])\r\n\r\n  print(f\"To print: {to_print}\\n\")\r\n  if to_print == \"Level\":\r\n    # Get all levels in the document\r\n    collector = FilteredElementCollector(doc).OfClass(Level)\r\n    levels = collector.ToElements()\r\n\r\n    # Create a list of level names\r\n    for level in levels:\r\n      print(f'\"{level.Id.ToString()}\", // {level.Name}')\r\n\r\n  # Print all plan\r\n  elif to_print == \"Plan\":\r\n    discipline_type = \"Electrical\"\r\n    plan_type = \"Ceiling Plan\"\r\n    elem_discipline = get_element_via_parameter(elements, \"Discipline\", discipline_type)\r\n    elem_plan = get_all_view_type(elem_discipline, plan_dict[plan_type])\r\n    for plan in elem_plan:\r\n      print(f'\"{plan.Id}\", // {plan.Name}')\r\n\r\n\r\nstart()\r\n\r\nOUT = result\r\nOUT = output.getvalue()",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import ViewType\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, Dimension\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ, Level\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\nresult = []\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n \r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\ndef get_element_via_parameter(elements, parameter_name, parameter_value):\r\n    result = []\r\n    for el in elements:\r\n        param_ViewType = el.GetParameters(parameter_name)[0]\r\n        if param_ViewType.AsValueString() == parameter_value:\r\n            result.append(el)\r\n            continue\r\n    return result\r\n\r\n\r\ndef get_all_view_type(elements, view_type):\r\n    result = []\r\n    for el in elements:\r\n        if el.ViewType == view_type:\r\n            result.append(el)\r\n    return result\r\n\r\nplan_dict = {\r\n    \"Floor Plan\": ViewType.FloorPlan,\r\n    \"Ceiling Plan\": ViewType.CeilingPlan\r\n}\r\n\r\nfamily_dict = {\r\n    \"Floor Plan\": ViewFamily.FloorPlan,\r\n    \"Ceiling Plan\": ViewFamily.CeilingPlan\r\n}\r\n\r\nto_print = UnwrapElement(IN[0])\r\nview_plan = UnwrapElement(IN[1])\r\ndiscipline = UnwrapElement(IN[2])\r\nelements = UnwrapElement(IN[3])\r\n\r\n@transaction\r\ndef start():\r\n  target_levels = UnwrapElement(IN[0])\r\n\r\n  print(f\"To print: {to_print} {view_plan}\\n\")\r\n  if to_print == \"Level\":\r\n    # Get all levels in the document\r\n    collector = FilteredElementCollector(doc).OfClass(Level)\r\n    levels = collector.ToElements()\r\n\r\n    # Create a list of level names\r\n    for level in levels:\r\n      print(f'\"{level.Id.ToString()}\", // {level.Name}')\r\n\r\n  # Print all plan\r\n  elif to_print == \"Plan\":\r\n    discipline_type = discipline\r\n    plan_type = view_plan\r\n    elem_discipline = get_element_via_parameter(elements, \"Discipline\", discipline_type)\r\n    elem_plan = get_all_view_type(elem_discipline, plan_dict[plan_type])\r\n    for plan in elem_plan:\r\n      print(f'\"{plan.Id}\", // {plan.Name}')\r\n\r\n\r\nstart()\r\n\r\nOUT = result\r\nOUT = output.getvalue()",
       "Engine": "CPython3",
       "VariableInputPorts": true,
       "Id": "8b800cc5e0c84cb6ade8cf266d48a25a",
@@ -255,6 +264,24 @@
           "Id": "0c6f6f51e3b74f2fa041d980db34d80d",
           "Name": "IN[1]",
           "Description": "Input #1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "bfaacf2aa27a483eb1efc79370a56c23",
+          "Name": "IN[2]",
+          "Description": "Input #2",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "1042224393b045b0839ffdc2bffe619d",
+          "Name": "IN[3]",
+          "Description": "Input #3",
           "UsingDefaultValue": false,
           "Level": 2,
           "UseLevels": false,
@@ -357,23 +384,72 @@
     {
       "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
       "NodeType": "CodeBlockNode",
-      "Code": "\"Copy\";\n\"Delete\";",
-      "Id": "e61562491fac453e80e402385c75e078",
+      "Code": "// View Type\n\"Floor Plan\";\n\"Ceiling Plan\";\n\n// Discipline\n\"Electrical\";",
+      "Id": "09534898f23846f09bb9530bed660063",
       "Inputs": [],
       "Outputs": [
         {
-          "Id": "b7e2e9e4cf0040c389d22a14d95546b4",
+          "Id": "3f577eca828e49e1bf4f267f5de2ff0a",
           "Name": "",
-          "Description": "Value of expression at line 1",
+          "Description": "Value of expression at line 2",
           "UsingDefaultValue": false,
           "Level": 2,
           "UseLevels": false,
           "KeepListStructure": false
         },
         {
-          "Id": "500ce0523fe24435a5dce1c86163b72c",
+          "Id": "8ba88397b39f467ca37205c3e05f1305",
           "Name": "",
-          "Description": "Value of expression at line 2",
+          "Description": "Value of expression at line 3",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "bb85cb8f9e93424c8c208529346b87ce",
+          "Name": "",
+          "Description": "Value of expression at line 6",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows for DesignScript code to be authored directly"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.BoolSelector, CoreNodeModels",
+      "NodeType": "BooleanInputNode",
+      "InputValue": false,
+      "Id": "4beaaf81b936422581d9c92c51c09937",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "91638c617beb449783a45c8cf3aa6140",
+          "Name": "",
+          "Description": "Boolean",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Selection between a true and false."
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "[\n\ttrue\t// Rename panels?\n];",
+      "Id": "6354e79a154b43459a65c8fd362d3612",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "78cb05228d6e42bda0e83d1ed958a1fa",
+          "Name": "",
+          "Description": "Value of expression at line 1",
           "UsingDefaultValue": false,
           "Level": 2,
           "UseLevels": false,
@@ -386,15 +462,15 @@
   ],
   "Connectors": [
     {
-      "Start": "c22e46e3aa5e484d98995be43e8f9ed0",
+      "Start": "7a97db1aa2dd4cf3bf9451365d5a8f44",
       "End": "9f7b33dd695b4d82919b81ebae9bd6ca",
-      "Id": "172016c1eda943f793c7f77fb5e785d8",
+      "Id": "ad0a4e2739df4b9fba4cd6511d2f662e",
       "IsHidden": "False"
     },
     {
-      "Start": "fa036ea10b214a0faf1ef4ea022cd448",
+      "Start": "ad8fbf021fda418cb393058ea87b21e2",
       "End": "12a4f7bb4b6546a3a9a6cc667187de6d",
-      "Id": "78b3f7084db04e7786045e4be5991286",
+      "Id": "2ba9f0f0a75646d2ae3fb53dc535bea2",
       "IsHidden": "False"
     },
     {
@@ -411,8 +487,8 @@
     },
     {
       "Start": "e4c5efb543764678bc0b72bcf9c83c2c",
-      "End": "0c6f6f51e3b74f2fa041d980db34d80d",
-      "Id": "af9d4d30501e488283fe4c1b7111bf6c",
+      "End": "1042224393b045b0839ffdc2bffe619d",
+      "Id": "b2552d7f070147579f43e0e611908b50",
       "IsHidden": "False"
     },
     {
@@ -446,9 +522,27 @@
       "IsHidden": "False"
     },
     {
-      "Start": "b7e2e9e4cf0040c389d22a14d95546b4",
+      "Start": "8ba88397b39f467ca37205c3e05f1305",
+      "End": "0c6f6f51e3b74f2fa041d980db34d80d",
+      "Id": "a42800623cce43b687cd66956b4bbbce",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "bb85cb8f9e93424c8c208529346b87ce",
+      "End": "bfaacf2aa27a483eb1efc79370a56c23",
+      "Id": "68824a7a43644f5a8169d41ab6b61427",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "91638c617beb449783a45c8cf3aa6140",
       "End": "bee3aa5ba5e84e3ebf816afc6c5b95b6",
-      "Id": "279292b8f80d49d7b7be3be23839dad4",
+      "Id": "22e949b438bc4dd69a5a7f1cf2c4f8ef",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "78cb05228d6e42bda0e83d1ed958a1fa",
+      "End": "35bfd9381e1848dda6000d001d1c5c51",
+      "Id": "60d03cb370a344f0814563ca49a34543",
       "IsHidden": "False"
     }
   ],
@@ -522,8 +616,8 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 989.17754437845042,
-        "Y": 93.817425620644912
+        "X": 976.27588361098037,
+        "Y": 32.106979533111769
       },
       {
         "Name": "Proceed?",
@@ -542,8 +636,8 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 494.91792379385288,
-        "Y": 1157.1368859463516
+        "X": 385.55774702856934,
+        "Y": 1161.7905104895551
       },
       {
         "Name": "Code Block",
@@ -552,8 +646,8 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 317.77534238423959,
-        "Y": 1280.2916167169317
+        "X": 208.41516561895605,
+        "Y": 1284.9452412601352
       },
       {
         "Name": "Watch",
@@ -562,8 +656,8 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 1097.5492025689505,
-        "Y": 792.98576659920172
+        "X": 1242.9749695440619,
+        "Y": 794.14917273500259
       },
       {
         "Name": "Level Printer.py",
@@ -572,8 +666,8 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 820.9471930137197,
-        "Y": 913.68080291297179
+        "X": 870.97365685315776,
+        "Y": 885.75905565375047
       },
       {
         "Name": "All Elements of Category",
@@ -582,8 +676,8 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": -4.19038799320856,
-        "Y": 1164.4007422293917
+        "X": -113.5505647584921,
+        "Y": 1169.0543667725951
       },
       {
         "Name": "Categories",
@@ -592,8 +686,8 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": -364.85166641981846,
-        "Y": 1168.3748662548217
+        "X": -474.21184318510188,
+        "Y": 1173.0284907980251
       },
       {
         "Name": "Which to Print?",
@@ -602,18 +696,38 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 505.70364397837557,
-        "Y": 892.66523613701179
+        "X": 606.919977793053,
+        "Y": 675.10828874224535
       },
       {
-        "Name": "Mode",
+        "Name": "View Plan",
         "ShowGeometry": true,
-        "Id": "e61562491fac453e80e402385c75e078",
+        "Id": "09534898f23846f09bb9530bed660063",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 451.4317181812288,
-        "Y": -158.897129687202
+        "X": 596.52643653408768,
+        "Y": 847.514492532162
+      },
+      {
+        "Name": "Copy/Delete",
+        "ShowGeometry": true,
+        "Id": "4beaaf81b936422581d9c92c51c09937",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 503.372395154725,
+        "Y": -208.56631664218261
+      },
+      {
+        "Name": "Options",
+        "ShowGeometry": true,
+        "Id": "6354e79a154b43459a65c8fd362d3612",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 376.64678613409779,
+        "Y": 398.11474535546961
       }
     ],
     "Annotations": [
@@ -631,19 +745,38 @@
           "44b5fc734eae49a29365190e8aa35d5c"
         ],
         "HasNestedGroups": false,
-        "Left": -374.85166641981846,
-        "Top": 1084.1368859463516,
-        "Width": 1116.7695902136713,
+        "Left": -484.21184318510188,
+        "Top": 1088.7905104895551,
+        "Width": 1116.7695902136711,
         "Height": 328.15473077058004,
         "FontSize": 36.0,
-        "InitialTop": 1157.1368859463516,
+        "InitialTop": 1161.7905104895551,
         "InitialHeight": 268.15473077058004,
         "TextblockHeight": 63.0,
         "Background": "#FFC1D676"
+      },
+      {
+        "Id": "d81589311ac74308aa2487a2007af61c",
+        "Title": "Copy = True\nDelete = False",
+        "DescriptionText": null,
+        "IsExpanded": true,
+        "WidthAdjustment": 0.0,
+        "HeightAdjustment": 0.0,
+        "Nodes": [],
+        "HasNestedGroups": false,
+        "Left": 502.72802386611124,
+        "Top": -249.16977376111794,
+        "Width": 0.0,
+        "Height": 0.0,
+        "FontSize": 36.0,
+        "InitialTop": 0.0,
+        "InitialHeight": 0.0,
+        "TextblockHeight": 0.0,
+        "Background": "#FFC1D676"
       }
     ],
-    "X": 457.36945908399827,
-    "Y": 139.17218303036771,
-    "Zoom": 0.42731131081167661
+    "X": 437.80013553519177,
+    "Y": 177.71687371808491,
+    "Zoom": 0.47730024254351539
   }
 }
