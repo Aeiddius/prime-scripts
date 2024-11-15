@@ -1,0 +1,187 @@
+{
+  "Uuid": "cdc60f9d-7ac2-4ec7-9eb6-8aceb0200a80",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "Delete Items",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "818bd430c0474b3eae470302362c6684",
+      "Inputs": [
+        {
+          "Id": "ee5437cc162d46ad9bbcf164a150f5ee",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "83db600642214d2ea34f3d18d2550703",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualize the node's output"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\nimport sys\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.ApplicationServices import *\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import Electrical, FilteredElementCollector,BuiltInParameter, BuiltInCategory, ElementTransformUtils, FamilyInstance\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, ViewType, XYZ, ViewPlan, ElementId, Electrical\r\n\r\nclr.AddReference('System')\r\n\r\nfrom System.Collections.Generic import List\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\nui_app = DocumentManager.Instance.CurrentUIApplication\r\napp = ui_app.Application\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\n\r\nactive_view = doc.ActiveView\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n\r\n\r\ndef gen_transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            t = Transaction(doc, 'Copy Elements C: Between Projects')\r\n            t.Start()\r\n            func(*args, **kwargs)\r\n            t.Commit()\r\n    return wrapper\r\n\r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\ndef get_element(id):\r\n  if isinstance(id, str):\r\n    return doc.GetElement(ElementId(id))\r\n  elif isinstance(id, ElementId):\r\n    return doc.GetElement(id)\r\n  return None\r\n\r\ndef get_element_via_parameter(elements, parameter_name, parameter_value):\r\n    result = []\r\n    for el in elements:\r\n        param_ViewType = el.GetParameters(parameter_name)[0]\r\n        if param_ViewType.AsValueString() == parameter_value:\r\n            result.append(el)\r\n            continue\r\n    return result\r\n\r\nexception_categories = [\r\n  int(BuiltInCategory.OST_RvtLinks),\r\n  int(BuiltInCategory.OST_Grids),\r\n  int(BuiltInCategory.OST_SectionBox),\r\n  int(BuiltInCategory.OST_Cameras),\r\n  int(BuiltInCategory.OST_Elev),\r\n  int(BuiltInCategory.OST_Viewers),\r\n  # int(BuiltInCategory.OST_IOSModelGroups),\r\n]\r\n\r\n\r\n\r\n\r\n\r\n\r\nview_type = ViewType.FloorPlan\r\n# view_type = ViewType.CeilingPlan\r\n\r\nview_discipline = \"Electrical\"\r\n# view_subdiscipline = \"Lighting\"\r\nview_subdiscipline = \"Devices\"\r\n\r\nlists = [\"5A\", \"6A\", \"7A\", \"8A\", \"9A\", \"10A\", \"11A\", \"12A\", \"13A\", \"14A\", \"15A\", \"16A\", \"17A\", \"18A\", \"19A\", \"20A\", \"21A\", \"22A\", \"23A\", \"24A\", \"25A\", \"26A\", \"27A\", \"28A\", \"29A\", \"30A\", \"31A\", \"32A\"]\r\n\r\n@transaction \r\ndef start():\r\n  \r\n\r\n  collector = FilteredElementCollector(doc).OfClass(ViewPlan)\r\n  floor_plan_views = [view for view in collector if isinstance(view, ViewPlan) and view.ViewType == view_type]\r\n  for view in floor_plan_views:\r\n\r\n    if view.IsTemplate == True:\r\n      print(\"This is a template: \", view.Name)\r\n      continue\r\n    # Discipline\r\n    disci = view.LookupParameter(\"Discipline\")\r\n    if disci.AsValueString() != view_discipline: continue\r\n\r\n    # Subdiscipline\r\n    subdisci = view.LookupParameter(\"Sub-Discipline\")\r\n    if subdisci.AsValueString() != view_subdiscipline: continue\r\n    x = view.Name.split(\"-\")[0].split(\" \")[1]\r\n    for i in lists:\r\n        if i == x:\r\n          print(view.Name)\r\n          elems = FilteredElementCollector(doc, view.Id).OfCategory(BuiltInCategory.OST_IOSModelGroups).ToElements()\r\n          for ed in elems:\r\n              doc.Delete(ed.Id)\r\n\r\nstart()\r\n\r\nOUT = output.getvalue()",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "f23b76909bb84acebe06ac4cc5095051",
+      "Inputs": [
+        {
+          "Id": "dc517f5bc15b4f4d8e3ab739b86780ba",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "a9da933c3cab4c0d90416648c2141d2b",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.BoolSelector, CoreNodeModels",
+      "NodeType": "BooleanInputNode",
+      "InputValue": false,
+      "Id": "e16f3e3a6cd045f490ef3b2333d0d921",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "e8a56e7f4ed74616881d4e6251664c8a",
+          "Name": "",
+          "Description": "Boolean",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Selection between a true and false."
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "a9da933c3cab4c0d90416648c2141d2b",
+      "End": "ee5437cc162d46ad9bbcf164a150f5ee",
+      "Id": "f3ac5b52720f4701bb8eee0c0027863a",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "e8a56e7f4ed74616881d4e6251664c8a",
+      "End": "dc517f5bc15b4f4d8e3ab739b86780ba",
+      "Id": "f827c90a1fef4fa2b7068867467999f0",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "2.13",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.13.1.3887",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Name": "Watch",
+        "ShowGeometry": true,
+        "Id": "818bd430c0474b3eae470302362c6684",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 356.40730985934607,
+        "Y": 126.51509764367921
+      },
+      {
+        "Name": "Python Script",
+        "ShowGeometry": true,
+        "Id": "f23b76909bb84acebe06ac4cc5095051",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 15.4687543554651,
+        "Y": 97.4567612843455
+      },
+      {
+        "Name": "Boolean",
+        "ShowGeometry": true,
+        "Id": "e16f3e3a6cd045f490ef3b2333d0d921",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -32.819673562915455,
+        "Y": 254.20578107661095
+      }
+    ],
+    "Annotations": [],
+    "X": 1.2005557178872266,
+    "Y": -24.314957361454248,
+    "Zoom": 1.0069333865956747
+  }
+}

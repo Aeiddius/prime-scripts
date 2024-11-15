@@ -9,10 +9,10 @@ from Autodesk.Revit.DB import FilteredElementCollector, IndependentTag,BuiltInPa
 
 from RevitServices.Persistence import DocumentManager
 from RevitServices.Transactions import TransactionManager
-from Autodesk.Revit.DB import Dimension, Line, XYZ, ViewPlan, ElementId, Electrical
+from Autodesk.Revit.DB import CurveLoop, DetailLine, XYZ, View, ElementId, Electrical
 
 clr.AddReference('System')
-from System.Collections.Generic import List
+from System.Collections.Generic import  IList 
 
 clr.AddReference("RevitAPI")
 clr.AddReference("RevitServices")
@@ -48,13 +48,43 @@ def get_element_via_parameter(elements, parameter_name, parameter_value):
             continue
     return result
 
+def get_num(str):
+    return int(''.join(char for char in str if char.isdigit()))
+
+
+filtered_views = []
+
+
+target_view_type = UnwrapElement(IN[0])
+target_discipline = UnwrapElement(IN[1])
+range_value = UnwrapElement(IN[2])
+
+min_range = range_value[0]
+max_range = range_value[1]
 
 @transaction 
 def start():
-  collector = FilteredElementCollector(doc).OfClass(ViewPlan)
-  print(collector)
-  # floor_plan_views = [view for view in collector if isinstance(view, ViewPlan) and view.ViewType == ViewType.FloorPlan]
+    view_list = FilteredElementCollector(doc).OfClass(ViewPlan).ToElements()
+    for view in view_list:
+        view_type = view.LookupParameter("View Type").AsValueString()
+        if view_type != target_view_type: continue
+
+        discipline = view.LookupParameter("Type").AsValueString()
+        if discipline != target_discipline: continue
+
+        level = get_num(view.Name)
+        if min_range <= level <= max_range:
+            print(view.Name, level)
+
+            filtered_views.append(view)
+    # for vt in view_types:
+    #     if vt.get_Name() == family_type_name and vt.ViewFamily == view_type:
+    #         return vt
+
+
+
 
 start()
 
-OUT = output.getvalue()
+# OUT = output.getvalue()
+OUT = filtered_views
