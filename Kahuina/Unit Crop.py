@@ -137,7 +137,8 @@ def get_elements(ids):
       elements.append(doc.GetElement(id))
   if all(isinstance(item, int) for item in ids):
     for id in ids:
-      elements.append(doc.GetElement(ElementId(id)))
+      x = doc.GetElement(ElementId(id))
+      elements.append(x)
   return elements
 
 def get_element_via_parameter(elements, parameter_name, parameter_value):
@@ -173,10 +174,19 @@ class UnitDetail:
     self.typical = typical
 
 
+prefixes = {
+  "Lighting": "L",
+  "Power": "P",
+  "Data": "D",
+  "Infrastructure": "I",
+  "Device": "DP",
+}
+
+
+
 do_delete = UnwrapElement(IN[0])
 target_views = UnwrapElement(IN[1])
-prefix = UnwrapElement(IN[2])[0]
-
+prefix = prefixes[UnwrapElement(IN[2])]
 
 
 # Range which the units appear
@@ -193,18 +203,30 @@ matrix = {
   "10 A-2AR": UnitDetail(4, 38, {35: "09", 36: "08", 37: "08", 38: "07"}, True),
   "11 A-1AR": UnitDetail(4, 36, {35: "10", 36: "09",}, True),
   "12 A-1A": UnitDetail(4, 31, {}, True),
-  "01 A-3E": UnitDetail(32, 32, {}, True),
-  "02 A-2B.1": UnitDetail(32, 32, {}, True),
-  "01 A-1C": UnitDetail(33, 36, {}, True),
-  "02 A-2D": UnitDetail(33, 36, {}, True),
-  "07 A-3B": UnitDetail(35, 35, {}, True),
-  "05 A-3F": UnitDetail(36, 36, {}, True),
-  "01 A-3D": UnitDetail(37, 39, {}, True),
-  "05 A-3G": UnitDetail(37, 37, {}, True),
+  "01 A-3E": UnitDetail(32, 32, {}),
+  "02 A-2B.1": UnitDetail(32, 32, {}),
+  "01 A-1C": UnitDetail(33, 36, {}),
+  "02 A-2D": UnitDetail(33, 42, {}),
+  "07 A-3B": UnitDetail(35, 35, {}),
+  "05 A-3F": UnitDetail(36, 36, {}),
+  "01 A-3D": UnitDetail(37, 39, {}),
+  "05 A-3G": UnitDetail(37, 37, {}),
+  "03 A-2BR.1": UnitDetail(38, 38, {}),
+  "04 A-3H": UnitDetail(38, 38, {}),
+  "04 A-3A": UnitDetail(39, 43, {43: "03",}),
+  "06 A-3BR": UnitDetail(39, 39, {}),
+  "01 A-3J": UnitDetail(40, 40, {}),
+  "06 A-2BR.2": UnitDetail(40, 40, {}),
+  "01 A-3DR": UnitDetail(41, 43, {}),
+  "03 A-2DR": UnitDetail(39, 42, {}),
+  "02 A-3C": UnitDetail(43, 43, {}),
+  "04 A-3C": UnitDetail(43, 43, {}),
+  "06 A-2D": UnitDetail(37, 42, {38: "05", 39: "05",  40: "05", 41: "05", 42: "05"}),
+  "06 A-2B.1": UnitDetail(36, 36, {}),
 }
 
 crop_detail_group = [
-  # from floor plan id 1581961
+  # from floor plan id 1581961 (TYPICAL 4-31)
   1582090,1582509,1582895,1583204,1583340,1583377,1583416,1583456,1583499,1583535,1583572,1583609,
   1760509, # 01 A-3E
   1771674, # 02 A-2B.1
@@ -213,7 +235,19 @@ crop_detail_group = [
   1785457, # 07 A-3B
   1799377, # 05 A-3F
   1834883, # 01 A-3D
-  1836240, # 5 A-3G
+  1836240, # 05 A-3G
+  1953214, # 03 A-2BR.1
+  1957088, # 04 A-3H
+  1957685, # 04 A-3A
+  1960991, # 06 A-3BR
+  1964094, # 01 A-3J
+  1964189, # 06 A-2BR.2
+  1965610, # 01 A-3DR
+  1965674, # 03 A-2DR
+  1967224, # 02 A-3C
+  1969196, # 04 A-3C
+  2058782, # 06 A-2B.1
+  2024228, # 06 A-2D
 ]
 
 @transaction 
@@ -225,6 +259,7 @@ def start():
 
   curve_dict = {}
   for dg in detail_groups:
+    if not dg: continue
     group_elements = dg.GetMemberIds()
     element = ""
     try:
@@ -271,12 +306,13 @@ def start():
           rename = f"UNIT {level:02d}{unit_pos} {type_name}-{prefix}"
         else:
           rename = f"UNIT {level:02d}{unit_name}-{prefix}"
-
+        print("RENAME: ", rename)
         dupli_view.Name = rename
 
         # Set Grids
         # detail_groups = FilteredElementCollector(doc, base_view.Id).OfCategory(BuiltInCategory.OST_IOSDetailGroups).ToElements()
 
+    break
 
 
 

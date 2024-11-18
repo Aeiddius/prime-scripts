@@ -12,7 +12,7 @@
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
       "NodeType": "PythonScriptNode",
-      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, IndependentTag,BuiltInParameter, BuiltInCategory, ElementTransformUtils, FamilyInstance\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, ViewType, XYZ, ViewPlan, ElementId, Electrical\r\n\r\nclr.AddReference('System')\r\nfrom System.Collections.Generic import List\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nactive_view = doc.ActiveView\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n\r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\ndef get_element(id):\r\n  if isinstance(id, str):\r\n    return doc.GetElement(ElementId(id))\r\n  elif isinstance(id, ElementId):\r\n    return doc.GetElement(id)\r\n  return None\r\n\r\ndef get_element_via_parameter(elements, parameter_name, parameter_value):\r\n    result = []\r\n    for el in elements:\r\n        param_ViewType = el.GetParameters(parameter_name)[0]\r\n        if param_ViewType.AsValueString() == parameter_value:\r\n            result.append(el)\r\n            continue\r\n    return result\r\n\r\nview_type = ViewType.FloorPlan\r\n# view_type = ViewType.CeilingPlan\r\n\r\nview_discipline = \"Electrical\"\r\nview_subdiscipline = \"Devices\"\r\n# view_subdiscipline = \"Power\"\r\n\r\nsuffix = \"D\"\r\n\r\n@transaction \r\ndef start():\r\n\r\n  collector = FilteredElementCollector(doc).OfClass(ViewPlan)\r\n  floor_plan_views = [view for view in collector if isinstance(view, ViewPlan) and view.ViewType == view_type]\r\n  for view in floor_plan_views:\r\n    if view.IsTemplate == True:\r\n      print(\"This is a template: \", view.Name)\r\n      continue\r\n    # Discipline\r\n    disci = view.LookupParameter(\"Discipline\")\r\n    if disci.AsValueString() != view_discipline: continue\r\n\r\n    # Subdiscipline\r\n    subdisci = view.LookupParameter(\"Sub-Discipline\")\r\n    if subdisci.AsValueString() != view_subdiscipline: continue\r\n\r\n    name = view.Name.split(\"-\")[0].replace(\"(1)\", \"\").replace(\"(2)\", \"\").strip()\r\n    name = f\"{name} - {suffix}\"\r\n    view.Name = name\r\n    # break\r\n\r\nstart()\r\n\r\nOUT = output.getvalue()",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, IndependentTag,BuiltInParameter, BuiltInCategory, ElementTransformUtils, FamilyInstance\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, ViewType, XYZ, ViewPlan, ElementId, Electrical\r\n\r\nclr.AddReference('System')\r\nfrom System.Collections.Generic import List\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nactive_view = doc.ActiveView\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n\r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\ndef get_element(id):\r\n  if isinstance(id, str):\r\n    return doc.GetElement(ElementId(id))\r\n  elif isinstance(id, ElementId):\r\n    return doc.GetElement(id)\r\n  return None\r\n\r\ndef get_element_via_parameter(elements, parameter_name, parameter_value):\r\n    result = []\r\n    for el in elements:\r\n        param_ViewType = el.GetParameters(parameter_name)[0]\r\n        if param_ViewType.AsValueString() == parameter_value:\r\n            result.append(el)\r\n            continue\r\n    return result\r\n\r\nview_type = ViewType.FloorPlan\r\n# view_type = ViewType.CeilingPlan\r\n\r\nview_discipline = \"Electrical\"\r\nview_subdiscipline = \"Device\"\r\n# view_subdiscipline = \"Power\"\r\n\r\nsuffix = \"DP\"\r\n\r\n@transaction \r\ndef start():\r\n\r\n  collector = FilteredElementCollector(doc).OfClass(ViewPlan)\r\n  floor_plan_views = [view for view in collector if isinstance(view, ViewPlan) and view.ViewType == view_type]\r\n  for view in floor_plan_views:\r\n    if view.IsTemplate == True:\r\n      print(\"This is a template: \", view.Name)\r\n      continue\r\n    # Discipline\r\n    disci = view.LookupParameter(\"Discipline\")\r\n    if disci.AsValueString() != view_discipline: continue\r\n\r\n    # Subdiscipline\r\n    subdisci = view.LookupParameter(\"Sub-Discipline\")\r\n    if subdisci.AsValueString() != view_subdiscipline: continue\r\n\r\n    name = view.Name.split(\"-\")[0].replace(\"(1)\", \"\").replace(\"(2)\", \"\").strip()\r\n    name = f\"{name}-{suffix}\"\r\n    view.Name = name\r\n    # break\r\n\r\nstart()\r\n\r\nOUT = output.getvalue()",
       "Engine": "CPython3",
       "VariableInputPorts": true,
       "Id": "ebb23ebc16634eb5bf98101547fb9c60",
@@ -149,39 +149,39 @@
     "ConnectorPins": [],
     "NodeViews": [
       {
+        "Name": "Python Script",
+        "ShowGeometry": true,
         "Id": "ebb23ebc16634eb5bf98101547fb9c60",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
-        "Name": "Python Script",
-        "ShowGeometry": true,
         "Excluded": false,
         "X": 113.05795068352566,
         "Y": 120.94849823869734
       },
       {
+        "Name": "Watch",
+        "ShowGeometry": true,
         "Id": "818bd430c0474b3eae470302362c6684",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
-        "Name": "Watch",
-        "ShowGeometry": true,
         "Excluded": false,
         "X": 456.09231506322135,
         "Y": 123.46351585172391
       },
       {
+        "Name": "Boolean",
+        "ShowGeometry": true,
         "Id": "cd18fa60d0fa4a11acb2dff20d23a7b0",
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
-        "Name": "Boolean",
-        "ShowGeometry": true,
         "Excluded": false,
         "X": -192.43066103794939,
         "Y": 48.6331433826267
       }
     ],
     "Annotations": [],
-    "X": 78.972915347291718,
-    "Y": 129.04125389154825,
+    "X": 601.97291534729175,
+    "Y": 137.04125389154825,
     "Zoom": 0.94308467029363285
   }
 }
