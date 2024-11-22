@@ -67,14 +67,16 @@ filtered_views = []
 
 
 
-target_discipline = "Power"
+target_discipline = "Lighting"
 
 
 
 
 info = {
     "Data": ElementId(1583642),
-    "Power": ElementId(1583645)
+    "Power": ElementId(1583645),
+    "Fire Protection": ElementId(2623561),
+    "Lighting": ElementId(1583644),
 }
 
 @transaction 
