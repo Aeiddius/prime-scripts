@@ -52,12 +52,11 @@ def get_element_via_parameter(elements, parameter_name, parameter_value):
             continue
     return result
 
-view_type = ViewType.FloorPlan
-# view_type = ViewType.CeilingPlan
+view_type = "Presentation Views"
 
-view_discipline = "Electrical"
-# view_subdiscipline = "Lighting"
-view_subdiscipline = "Power"
+# view_discipline = "Electrical"
+view_discipline = "Lighting"
+# view_discipline = "Power"
 
 target_id = "1363645"
 
@@ -65,21 +64,19 @@ target_id = "1363645"
 def start():
   base_floor = get_element(target_id)
   cb = base_floor.CropBox
-  print(cb)
-  
-  collector = FilteredElementCollector(doc).OfClass(ViewPlan)
-  floor_plan_views = [view for view in collector if isinstance(view, ViewPlan) and view.ViewType == view_type]
-  for view in floor_plan_views:
+
+  view_list = FilteredElementCollector(doc).OfClass(ViewPlan).ToElements()
+  for view in view_list:
     if view.IsTemplate == True:
       print("This is a template: ", view.Name)
       continue
     # Discipline
-    disci = view.LookupParameter("Discipline")
-    if disci.AsValueString() != view_discipline: continue
+    disci = view.LookupParameter("View Type")
+    if disci.AsValueString() != view_type: continue
 
     # Subdiscipline
     subdisci = view.LookupParameter("Sub-Discipline")
-    if subdisci.AsValueString() != view_subdiscipline: continue
+    if subdisci.AsValueString() != view_discipline: continue
 
     view.CropBox = cb
     view.CropBoxActive = True

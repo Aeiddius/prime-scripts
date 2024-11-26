@@ -100,16 +100,6 @@ options = UnwrapElement(IN[4])
 
 # 2680980
 
-exception_categories = [
-  int(BuiltInCategory.OST_RvtLinks),
-  int(BuiltInCategory.OST_Grids),
-  int(BuiltInCategory.OST_SectionBox),
-  int(BuiltInCategory.OST_Cameras),
-  int(BuiltInCategory.OST_Elev),
-  int(BuiltInCategory.OST_Viewers),
-  int(BuiltInCategory.OST_Viewers),
-  int(BuiltInCategory.OST_IOSModelGroups)
-]
 
 @transaction 
 def start():

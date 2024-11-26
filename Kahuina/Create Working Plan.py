@@ -67,7 +67,7 @@ filtered_views = []
 
 
 
-target_discipline = "Lighting"
+target_discipline = "Device"
 
 
 
@@ -77,6 +77,7 @@ info = {
     "Power": ElementId(1583645),
     "Fire Protection": ElementId(2623561),
     "Lighting": ElementId(1583644),
+    "Device": ElementId(1969664)
 }
 
 @transaction 
@@ -103,6 +104,8 @@ def start():
         # Create floor plan
         floor_plan_type = info[target_discipline]
         suffix = target_discipline[0]
+        if target_discipline == "Device":
+            suffix = "DP"
         floor_plan = ViewPlan.Create(doc, floor_plan_type, view.GenLevel.Id)
         floor_plan.Name = f"Working {view.Name.replace('UNIT', 'Unit')} {suffix}"
 
@@ -142,7 +145,8 @@ def start():
 
                 # Rename
                 level = get_num(view.Name)
-                rename = f"Working Unit {level:02d} ({unit_name}) {suffix}"
+                rename = f"Working Unit {level:02d}{unit_name.replace(' ', ' (')}) {suffix}"
+                print(rename)
                 dupli_view.Name = rename
 
         # break

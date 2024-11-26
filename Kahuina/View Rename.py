@@ -52,36 +52,41 @@ def get_element_via_parameter(elements, parameter_name, parameter_value):
             continue
     return result
 
-view_type = ViewType.FloorPlan
-view_type = ViewType.CeilingPlan
+view_type = "Working Views"
 
-view_discipline = "Electrical"
-# view_subdiscipline = "Infrastructure"
-view_subdiscipline = "Lighting"
+# view_discipline = "Electrical"
+view_discipline = "Lighting"
+# view_discipline = "Power"
+
 
 @transaction 
 def start():
 
-  collector = FilteredElementCollector(doc).OfClass(ViewPlan)
-  floor_plan_views = [view for view in collector if isinstance(view, ViewPlan) and view.ViewType == view_type]
-  for view in floor_plan_views:
+  view_list = FilteredElementCollector(doc).OfClass(ViewPlan).ToElements()
+  for view in view_list:
     if view.IsTemplate == True:
       print("This is a template: ", view.Name)
       continue
     # Discipline
-    disci = view.LookupParameter("Discipline")
-    if disci.AsValueString() != view_discipline: continue
+    # Discipline
+    disci = view.LookupParameter("View Type")
+    if disci.AsValueString() != view_type: continue
 
     # Subdiscipline
     subdisci = view.LookupParameter("Sub-Discipline")
-    if subdisci.AsValueString() != view_subdiscipline: continue
+    if subdisci.AsValueString() != view_discipline: continue
 
-    suffix = "L"
 
-    name = view.Name.split("-")[0].strip()
-    name = f"{name}-{suffix}"
-    view.Name = name
-    # print(name)
+    if "Level" in view.Name: continue
+    name = view.Name.split(" ")
+    new_id = f"{name[2][0:2]} ({name[2][-2:]} {name[3].replace('(', '')}"
+    new_name = f"{name[0]} {name[1]} {new_id} {name[4]} "
+    # suffix = "L"
+    # if "-L" in view.Name: continue
+    # name = view.Name.split("-")[0].strip()
+    # name = f"{name}-{suffix}"
+    view.Name = new_name
+    print(new_name)
 
 start()
 
