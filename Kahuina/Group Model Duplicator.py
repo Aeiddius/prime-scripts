@@ -10,7 +10,7 @@ from Autodesk.Revit.DB import FilteredElementCollector, ViewPlan, Transform, Bui
 
 from RevitServices.Persistence import DocumentManager
 from RevitServices.Transactions import TransactionManager
-from Autodesk.Revit.DB import CurveLoop, DetailLine, FamilyInstance, View, ElementId, CopyPasteOptions
+from Autodesk.Revit.DB import CurveLoop, DetailLine, IndependentTag, FamilyInstance, MEPSystem, ElementId, CopyPasteOptions
 from Autodesk.Revit.DB.Electrical import ElectricalEquipment, ElectricalSystem
 clr.AddReference('System')
 from System.Collections.Generic import List
@@ -133,16 +133,22 @@ def filter_source_elements2(base_view):
     elements_source = FilteredElementCollector(doc, base_view.Id).WhereElementIsNotElementType().ToElements()
     filtered_elements = []
     added_ids = []
+    
     # Filter Elements
     group_count = 0
     for e in elements_source:
+        # skip weird shit that does not have a category.
         category = e.Category
         if not category: continue
 
+        # skip banned categories
         if not category or (category and category.Id.IntegerValue in exception_categories):
             continue
+
+        # Add model groups containing 3d models
         if category.Id.IntegerValue == int(BuiltInCategory.OST_IOSModelGroups):
-            print(f"Group {group_count}: ", e.Name)
+            # print(f"Group {group_count}: ", e.Name)
+            # Gets the instances inside the model group
             ids = e.GetMemberIds()
             for id in ids:
                 grp_elem = get_element(id)
@@ -156,24 +162,32 @@ def filter_source_elements2(base_view):
                         if j.Id not in added_ids:
                             filtered_elements.append(j)
                             added_ids.append(j.Id)
-                            print(f"Added {j.Id} {j}")
+                            
             group_count += 1
             continue
-
-        if isinstance(e, FamilyInstance):
-            if isinstance(e.MEPModel, ElectricalEquipment):
-                # print("Included: ", e.Name, " ", e.Id)
-                filtered_elements.append(e)
+        
+        # Add panels
+        if isinstance(e, FamilyInstance) and isinstance(e.MEPModel, ElectricalEquipment):
+            # print("Included: ", e.Name, " ", e.Id)
+            filtered_elements.append(e)
             continue
-
+        
+        # Skip circuits since we added it already
         if isinstance(e, ElectricalSystem):
             continue
+        
+        # Filter out Switch systems
+        if isinstance(e, MEPSystem):
+            if (e.BaseEquipment):
+                if e.BaseEquipment.Id in added_ids and e not in filtered_elements:
+                    filtered_elements.append(e)
+            continue
 
+        # add anything else extra
         filtered_elements.append(e)
         added_ids.append(e.Id)
 
-        print(e, e.Name)
-        
+
     return filtered_elements
 
 class UnitDetail:
@@ -186,8 +200,8 @@ class UnitDetail:
 
 class Source:
 
-    def __init__(self,view, elements, ):
-        self.elements = elements
+    def __init__(self, view, elements, ):
+        self.elements = list(set(elements))
         self.sview = view
         self.elements_list = List[ElementId]([e.Id for e in self.elements])
 
@@ -233,38 +247,82 @@ target_discipline = "Lighting"
 filtered_views = []
 
 
-unit_source = {
-
-}
+unit_source = {}
 
 min = 5
 max = 43
+
 
 
 @transaction
 def start2():
     source_views = get_view_range("Working Views", target_discipline)
     
-    sources_matrix = {}
-
     for view in source_views:
         if "Level 4A" in view.Name: continue
 
+
         unit_name = re.search(r"\((.*?)\)", view.Name).group(1)
-        
-        print(unit_name)
         filtered_elements = filter_source_elements2(view)
         # level = get_num(view.LookupParameter("Associated Level").AsValueString())
         # view_level = re.findall(r"\s\d{4}\s", view.Name)
-        unit_source[unit_name] = Source(view, filtered_elements)
-        print("====\n\n")
+
+        if "Dependent " in view.LookupParameter("Dependency").AsValueString():
+            unit_source[unit_name] = Source(get_element(view.GetPrimaryViewId()), filtered_elements)
+        else:
+            unit_source[unit_name] = Source(view, filtered_elements)
+
+
+    # Get Target views in a neat dictionary
     target_views = get_view_range("Presentation Views", target_discipline)
+    target_source = {}
+    for tview in target_views:
+        if "Dependent " in tview.LookupParameter("Dependency").AsValueString():
+            continue
+        level = get_num(tview.Name)
+        target_source[level] = tview
 
-    # for tview in target_views:
-    #     level = get_num(tview.Name)
 
-    #     if "Dependent " in tview.LookupParameter("Dependency").AsValueString():
-    #         continue
+    # iterates through units
+    for unit in unit_source:
+        print
+        unit_matrix = matrix[unit]
+        min_lvl = unit_matrix.min
+        max_lvl = unit_matrix.max
+
+        for tgtv in target_source:
+            # Places only in where they are applicable
+            if min_lvl <= tgtv <= max_lvl:
+                # print(f"{min_lvl} | {max_lvl} | Current: {tgtv}")
+                
+                # for i in unit_source[unit].elements:
+                #     print(i)
+                # break  
+                # print("SUPPIOSED: ", unit_source[unit].sview.Id)
+                # for i in unit_source[unit].elements:
+                #     print(i.OwnerViewId)
+                # break
+                copied_ids = ElementTransformUtils.CopyElements(
+                    unit_source[unit].sview, 
+                    unit_source[unit].elements_list, 
+                    target_source[tgtv], 
+                    Transform.Identity,
+                    CopyPasteOptions()
+                )
+                xids = []
+                for i in copied_ids:
+                    xids.append(i.ToString())
+                print(f"{unit}:  {xids}\n")
+                copied_elements = [get_element(cid) for cid in copied_ids]
+
+                for celem in copied_elements:
+                    if isinstance(celem, FamilyInstance): 
+                        parameter = celem.LookupParameter("Schedule Level")
+                        if parameter and not parameter.IsReadOnly:
+                            parameter.Set(target_source[tgtv].GenLevel.Id)
+        
+
+        
 
 
 @transaction 
