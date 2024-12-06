@@ -52,10 +52,10 @@ def get_element_via_parameter(elements, parameter_name, parameter_value):
             continue
     return result
 
-view_type = "Working Views"
+view_type = "Utility Views"
 
 # view_discipline = "Electrical"
-view_discipline = "Lighting"
+view_discipline = "Dynamo Target Plans"
 # view_discipline = "Power"
 
 
@@ -73,14 +73,21 @@ def start():
     if disci.AsValueString() != view_type: continue
 
     # Subdiscipline
-    subdisci = view.LookupParameter("Sub-Discipline")
+    subdisci = view.LookupParameter("Type")
     if subdisci.AsValueString() != view_discipline: continue
 
 
-    if "Level" in view.Name: continue
-    name = view.Name.split(" ")
-    new_id = f"{name[2][0:2]} ({name[2][-2:]} {name[3].replace('(', '')}"
-    new_name = f"{name[0]} {name[1]} {new_id} {name[4]} "
+    new_name = view.Name.replace("LEVEL", "Dynamo Level")
+
+
+
+    #### Working plan rename
+    # if "Level" in view.Name: continue
+    # name = view.Name.split(" ")
+    # new_id = f"{name[2][0:2]} ({name[2][-2:]} {name[3].replace('(', '')}"
+    # new_name = f"{name[0]} {name[1]} {new_id} {name[4]} "
+
+
     # suffix = "L"
     # if "-L" in view.Name: continue
     # name = view.Name.split("-")[0].strip()

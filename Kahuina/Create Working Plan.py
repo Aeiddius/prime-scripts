@@ -67,7 +67,7 @@ filtered_views = []
 
 
 
-target_discipline = "Device"
+target_discipline = "Dynamo Copy Plan"
 
 
 
@@ -77,23 +77,25 @@ info = {
     "Power": ElementId(1583645),
     "Fire Protection": ElementId(2623561),
     "Lighting": ElementId(1583644),
-    "Device": ElementId(1969664)
+    "Device": ElementId(1969664),
+    "Dynamo Copy Plan": ElementId(1582582),
 }
 
 @transaction 
 def start():
     view_list = FilteredElementCollector(doc).OfClass(ViewPlan).ToElements()
-
+    
     for view in view_list:
         view_type = view.LookupParameter("View Type").AsValueString()
         if view_type != "Utility Views": continue
 
         discipline = view.LookupParameter("Type").AsValueString()
-        if discipline != "Lighting": continue
-
-        
+        print(view.LookupParameter("Type").AsValueString())
+        if discipline != "Base Plan": continue
         
         filtered_views.append(view)
+
+    print("Niggessr", filtered_views)
 
     for view in filtered_views:
 
@@ -105,9 +107,9 @@ def start():
         floor_plan_type = info[target_discipline]
         suffix = target_discipline[0]
         if target_discipline == "Device":
-            suffix = "DP"
+            suffix = "CC"
         floor_plan = ViewPlan.Create(doc, floor_plan_type, view.GenLevel.Id)
-        floor_plan.Name = f"Working {view.Name.replace('UNIT', 'Unit')} {suffix}"
+        floor_plan.Name = f"Dynamo {view.Name.replace('UNIT', 'Unit')} {suffix}"
 
         # Set Values
         floor_plan.LookupParameter("View Type").Set("Working Views")
@@ -142,10 +144,9 @@ def start():
                 crop_manager = dupli_view.GetCropRegionShapeManager()
                 crop_manager.SetCropShape(curve)
 
-
                 # Rename
                 level = get_num(view.Name)
-                rename = f"Working Unit {level:02d}{unit_name.replace(' ', ' (')}) {suffix}"
+                rename = f"Dynamo Unit {level:02d}{unit_name.replace(' ', ' (')}) {suffix}"
                 print(rename)
                 dupli_view.Name = rename
 

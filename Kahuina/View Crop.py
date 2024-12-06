@@ -52,10 +52,10 @@ def get_element_via_parameter(elements, parameter_name, parameter_value):
             continue
     return result
 
-view_type = "Presentation Views"
+view_type = "Utility Views"
 
 # view_discipline = "Electrical"
-view_discipline = "Lighting"
+view_discipline = "Dynamo Target Plan"
 # view_discipline = "Power"
 
 target_id = "1363645"
@@ -75,8 +75,8 @@ def start():
     if disci.AsValueString() != view_type: continue
 
     # Subdiscipline
-    subdisci = view.LookupParameter("Sub-Discipline")
-    if subdisci.AsValueString() != view_discipline: continue
+    type = view.LookupParameter("Type")
+    if type.AsValueString() != view_discipline: continue
 
     view.CropBox = cb
     view.CropBoxActive = True
