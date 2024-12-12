@@ -1,0 +1,216 @@
+{
+  "Uuid": "d3729592-126c-4263-96c7-1ee70d6622dc",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "Sheet Generator",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "CoreNodeModels.Input.BoolSelector, CoreNodeModels",
+      "NodeType": "BooleanInputNode",
+      "InputValue": false,
+      "Id": "d5c6362afcf8413bafd6e659ff1455e0",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "475c85ddf0c84f79a65d131ee377ae33",
+          "Name": "",
+          "Description": "Boolean",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Selection between a true and false."
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, ViewSheet,Viewport, BuiltInCategory, ElementTransformUtils, FamilyInstance\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ, ViewPlan, ElementId, Electrical\r\n\r\nclr.AddReference('System')\r\nfrom System.Collections.Generic import List\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nactive_view = doc.ActiveView\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n\r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\ndef get_element(id):\r\n  if isinstance(id, str) or isinstance(id, int):\r\n    return doc.GetElement(ElementId(id))\r\n  elif isinstance(id, ElementId):\r\n    return doc.GetElement(id)\r\n  return None\r\n\r\ndef get_element_via_parameter(elements, parameter_name, parameter_value):\r\n    result = []\r\n    for el in elements:\r\n        param_ViewType = el.GetParameters(parameter_name)[0]\r\n        if param_ViewType.AsValueString() == parameter_value:\r\n            result.append(el)\r\n            continue\r\n    return result\r\n\r\n\r\n@transaction \r\ndef start():\r\n    titleblock_id = ElementId(2700731)\r\n    view_id = ElementId(2637110)\r\n    # view_id = ElementId(2687631)\r\n    # new_sheet = ViewSheet.Create(doc, titleblock_id)\r\n    # new_sheet.LookupParameter(\"Sheet Group\").Set(\"Unit Plan\")\r\n\r\n    # new_sheet.LookupParameter(\"Sheet Type\").Set(\"Floor A4\")\r\n\r\n    # new_sheet.LookupParameter(\"Sheet Sub-Type\").Set(\"0402 A-2A\")\r\n\r\n\r\n    # pt_cros = XYZ(-0.15,0.75,0)\r\n    # vp = Viewport.Create(doc, new_sheet.Id, view_id, pt_cros)\r\n    vp = get_element(3777011) # Lighhtibng\r\n    vp = get_element(3777004) # Device\r\n    # print_member(vp)\r\n    vp_bbox = vp.GetBoxOutline()\r\n    max_p = vp_bbox.MaximumPoint\r\n    min_p = vp_bbox.MinimumPoint\r\n    \r\n    val = max_p.Subtract(min_p)\r\n    current_center = vp.GetBoxCenter()\r\n\r\n    # vp.SetBoxCenter(XYZ(96.7,26.5,0))\r\n    # vp.SetBoxCenter(XYZ(0,0,0))\r\n    # vp.SetBoxCenter(XYZ(2.975649178, 1.864583333, 0.000000000))\r\n    print(val)\r\n    vp.SetBoxCenter(XYZ(val.X/2, val.Y/2, 0))\r\n    # print(\"Min= \", bottom_left)\r\n    # print_member(vp_min)\r\n\r\n\r\nstart()\r\n\r\nOUT = output.getvalue()",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "b6c4443bafad485b8e4285f174d39dcc",
+      "Inputs": [
+        {
+          "Id": "6de3c57c1cd54e139851ea000cf80d8a",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "ff470b3948544122aaf5301ff3110106",
+          "Name": "IN[1]",
+          "Description": "Input #1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "a915be7963014d799dd69faed68204a0",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "",
+      "Id": "31f423f262e34ffa9a81b812a99d0cb3",
+      "Inputs": [],
+      "Outputs": [],
+      "Replication": "Disabled",
+      "Description": "Allows for DesignScript code to be authored directly"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "d38b47f15e7346c4b796ecb48514e451",
+      "Inputs": [
+        {
+          "Id": "e17e2880c68c41c98d2b49dc30f0a6fd",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "d3759bf100f84a559eb0e082f0b04c00",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualize the node's output"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "475c85ddf0c84f79a65d131ee377ae33",
+      "End": "6de3c57c1cd54e139851ea000cf80d8a",
+      "Id": "c090597038fe48ff93d7201f38517584",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "a915be7963014d799dd69faed68204a0",
+      "End": "e17e2880c68c41c98d2b49dc30f0a6fd",
+      "Id": "cd68dd1f4b5841e6b4bf2f55d0cdb7e6",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "2.13",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.13.1.3887",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Name": "Boolean",
+        "ShowGeometry": true,
+        "Id": "d5c6362afcf8413bafd6e659ff1455e0",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1054.0157197536578,
+        "Y": -9.889630150405111
+      },
+      {
+        "Name": "Python Script",
+        "ShowGeometry": true,
+        "Id": "b6c4443bafad485b8e4285f174d39dcc",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1037.1860277269625,
+        "Y": 267.64219781376573
+      },
+      {
+        "Name": "Code Block",
+        "ShowGeometry": true,
+        "Id": "31f423f262e34ffa9a81b812a99d0cb3",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 769.24278243368326,
+        "Y": 257.025411929245
+      },
+      {
+        "Name": "Watch",
+        "ShowGeometry": true,
+        "Id": "d38b47f15e7346c4b796ecb48514e451",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1273.5959620223462,
+        "Y": 159.71494598609925
+      }
+    ],
+    "Annotations": [],
+    "X": -405.90023948530813,
+    "Y": 75.605775318710656,
+    "Zoom": 0.6627707524710208
+  }
+}

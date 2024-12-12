@@ -155,17 +155,6 @@ def filter_source_elements(base_view):
     return filtered_elements
 
 
-def delete_models():
-    model_groups = FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_IOSModelGroups).WhereElementIsNotElementType().ToElements()
-    model_group_types = []
-    for grp in model_groups:
-        comments = grp.LookupParameter("Comments")
-        if comments.AsValueString() == "DYNAMOSCRIPTMODEL":
-            doc.Delete(grp.Id)
-            model_group_types.append(grp.GroupType.Id)
-            # print(comments.AsValueString())
-    for i in model_group_types:
-        doc.Delete(i)
 
 
 class UnitDetail:
@@ -234,7 +223,7 @@ unit_source = {}
 @transaction
 def start():
     # delete group models with DYNAMOSCRIPTMODEL name
-    delete_models()
+    
 
     # Get source views
     st_a1 = time.perf_counter()
@@ -331,7 +320,34 @@ def start():
     elapsed_time = end_time - start_time
     print(f"Execution time: {elapsed_time} seconds")
 
+
+@transaction
+def delete_models():
+    start_time = time.perf_counter()
+
+
+    model_groups = FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_IOSModelGroups).WhereElementIsNotElementType().ToElements()
+    model_group_types = {}
+    for grp in model_groups:
+        comments = grp.LookupParameter("Comments")
+        if comments.AsValueString() == "DYNAMOSCRIPTMODEL":
+            print(grp.Name)
+            grp_type_id = grp.GroupType.Id.ToString()
+            if grp_type_id not in model_group_types:
+                model_group_types[grp_type_id] = grp.GroupType
+            doc.Delete(grp.Id)
+    
+    for i in model_group_types:
+
+        doc.Delete(model_group_types[i].Id)
+
+
+    end_time = time.perf_counter()
+    elapsed_time = end_time - start_time
+    print(f"Delete time: {elapsed_time} seconds")
+
 start_total = time.perf_counter()
+delete_models()
 start()
 end_total = time.perf_counter()
 print(f"Total time: {end_total-start_total} seconds.")
