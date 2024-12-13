@@ -85,7 +85,10 @@ def start():
     new_y = (val.Y/2) + 0.15
     # new_x = (val.X/2) 
     # new_y = (val.Y/2) 
-    vp.SetBoxCenter(XYZ(new_x, new_y, 0))
+
+    # vp.SetBoxCenter(XYZ(new_x, new_y, 0))
+    vp.SetBoxCenter(XYZ(0, 0, 0))
+
     # print("Min= ", bottom_left)
     # print_member(vp_min)
 

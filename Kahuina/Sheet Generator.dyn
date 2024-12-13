@@ -32,7 +32,7 @@
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
       "NodeType": "PythonScriptNode",
-      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, ViewSheet,Viewport, BuiltInCategory, ElementTransformUtils, FamilyInstance\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ, ViewPlan, ElementId, Electrical\r\n\r\nclr.AddReference('System')\r\nfrom System.Collections.Generic import List\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nactive_view = doc.ActiveView\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n\r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\ndef get_element(id):\r\n  if isinstance(id, str) or isinstance(id, int):\r\n    return doc.GetElement(ElementId(id))\r\n  elif isinstance(id, ElementId):\r\n    return doc.GetElement(id)\r\n  return None\r\n\r\ndef get_element_via_parameter(elements, parameter_name, parameter_value):\r\n    result = []\r\n    for el in elements:\r\n        param_ViewType = el.GetParameters(parameter_name)[0]\r\n        if param_ViewType.AsValueString() == parameter_value:\r\n            result.append(el)\r\n            continue\r\n    return result\r\n\r\n\r\n@transaction \r\ndef start():\r\n    titleblock_id = ElementId(2700731)\r\n    view_id = ElementId(2637110)\r\n    # view_id = ElementId(2687631)\r\n    # new_sheet = ViewSheet.Create(doc, titleblock_id)\r\n    # new_sheet.LookupParameter(\"Sheet Group\").Set(\"Unit Plan\")\r\n\r\n    # new_sheet.LookupParameter(\"Sheet Type\").Set(\"Floor A4\")\r\n\r\n    # new_sheet.LookupParameter(\"Sheet Sub-Type\").Set(\"0402 A-2A\")\r\n\r\n\r\n    # pt_cros = XYZ(-0.15,0.75,0)\r\n    # vp = Viewport.Create(doc, new_sheet.Id, view_id, pt_cros)\r\n    vp = get_element(3777011) # Lighhtibng\r\n    vp = get_element(3777004) # Device\r\n    # print_member(vp)\r\n    vp_bbox = vp.GetBoxOutline()\r\n    max_p = vp_bbox.MaximumPoint\r\n    min_p = vp_bbox.MinimumPoint\r\n    \r\n    val = max_p.Subtract(min_p)\r\n    current_center = vp.GetBoxCenter()\r\n\r\n    # vp.SetBoxCenter(XYZ(96.7,26.5,0))\r\n    # vp.SetBoxCenter(XYZ(0,0,0))\r\n    # vp.SetBoxCenter(XYZ(2.975649178, 1.864583333, 0.000000000))\r\n    print(val)\r\n    vp.SetBoxCenter(XYZ(val.X/2, val.Y/2, 0))\r\n    # print(\"Min= \", bottom_left)\r\n    # print_member(vp_min)\r\n\r\n\r\nstart()\r\n\r\nOUT = output.getvalue()",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, ViewSheet,Viewport, BuiltInCategory, ElementTransformUtils, FamilyInstance\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, Line, XYZ, ViewPlan, ElementId, Electrical\r\n\r\nclr.AddReference('System')\r\nfrom System.Collections.Generic import List\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nactive_view = doc.ActiveView\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n\r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\ndef get_element(id):\r\n  if isinstance(id, str) or isinstance(id, int):\r\n    return doc.GetElement(ElementId(id))\r\n  elif isinstance(id, ElementId):\r\n    return doc.GetElement(id)\r\n  return None\r\n\r\ndef get_element_via_parameter(elements, parameter_name, parameter_value):\r\n    result = []\r\n    for el in elements:\r\n        param_ViewType = el.GetParameters(parameter_name)[0]\r\n        if param_ViewType.AsValueString() == parameter_value:\r\n            result.append(el)\r\n            continue\r\n    return result\r\n\r\n\r\n@transaction \r\ndef start():\r\n    titleblock_id = ElementId(2700731)\r\n    view_id = ElementId(2637110)\r\n    # view_id = ElementId(2687631)\r\n    # new_sheet = ViewSheet.Create(doc, titleblock_id)\r\n    # new_sheet.LookupParameter(\"Sheet Group\").Set(\"Unit Plan\")\r\n\r\n    # new_sheet.LookupParameter(\"Sheet Type\").Set(\"Floor A4\")\r\n\r\n    # new_sheet.LookupParameter(\"Sheet Sub-Type\").Set(\"0402 A-2A\")\r\n\r\n\r\n    # pt_cros = XYZ(-0.15,0.75,0)\r\n    # vp = Viewport.Create(doc, new_sheet.Id, view_id, pt_cros)\r\n    vp = get_element(3777011) # Lighhtibng\r\n    vp = get_element(3777004) # Device\r\n    # print_member(vp)\r\n    vp_bbox = vp.GetBoxOutline()\r\n    max_p = vp_bbox.MaximumPoint\r\n    min_p = vp_bbox.MinimumPoint\r\n    \r\n    val = max_p.Subtract(min_p)\r\n    current_center = vp.GetBoxCenter()\r\n\r\n    # vp.SetBoxCenter(XYZ(96.7,26.5,0))\r\n    # vp.SetBoxCenter(XYZ(0,0,0))\r\n    # vp.SetBoxCenter(XYZ(2.975649178, 1.864583333, 0.000000000))\r\n    new_x = (val.X/2) + 0.4\r\n    new_y = (val.Y/2) + 0.15\r\n    # new_x = (val.X/2) \r\n    # new_y = (val.Y/2) \r\n    vp.SetBoxCenter(XYZ(new_x, new_y, 0))\r\n    # print(\"Min= \", bottom_left)\r\n    # print_member(vp_min)\r\n\r\n\r\nstart()\r\n\r\nOUT = output.getvalue()",
       "Engine": "CPython3",
       "VariableInputPorts": true,
       "Id": "b6c4443bafad485b8e4285f174d39dcc",
@@ -174,8 +174,8 @@
         "IsSetAsInput": false,
         "IsSetAsOutput": false,
         "Excluded": false,
-        "X": 1054.0157197536578,
-        "Y": -9.889630150405111
+        "X": 1056.4752636003459,
+        "Y": -19.727805537157593
       },
       {
         "Name": "Python Script",
@@ -205,12 +205,12 @@
         "IsSetAsOutput": false,
         "Excluded": false,
         "X": 1273.5959620223462,
-        "Y": 159.71494598609925
+        "Y": 159.71494598609928
       }
     ],
     "Annotations": [],
-    "X": -405.90023948530813,
-    "Y": 75.605775318710656,
-    "Zoom": 0.6627707524710208
+    "X": -697.802335299497,
+    "Y": 25.263432371892833,
+    "Zoom": 0.81315891265491358
   }
 }
