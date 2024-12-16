@@ -5,7 +5,7 @@ from io import StringIO
 import Autodesk
 import RevitServices
 from Autodesk.Revit.DB import *
-from Autodesk.Revit.DB import FilteredElementCollector, IndependentTag,BuiltInParameter, BuiltInCategory, ElementTransformUtils, FamilyInstance
+from Autodesk.Revit.DB import FilteredElementCollector, IndependentTag,FilledRegion, CurveLoop, DetailLine, BuiltInCategory 
 
 from RevitServices.Persistence import DocumentManager
 from RevitServices.Transactions import TransactionManager
@@ -52,38 +52,40 @@ def get_element_via_parameter(elements, parameter_name, parameter_value):
             continue
     return result
 
-view_type = "Utility Views"
 
-# view_discipline = "Electrical"
-view_discipline = "Dynamo Crop Plan"
-# view_discipline = "Power"
+def get_room_curve(group_elements):
+  room_curve = CurveLoop()
+  for id in group_elements:
+    e = doc.GetElement(id)
+    if isinstance(e, DetailLine):
+      line = e.GeometryCurve
+      room_curve.Append(line)
+  return room_curve
+ 
 
-target_id = "1581961"
+target_id = "1657348"
+
+floor_views = {}
 
 @transaction 
 def start():
   base_floor = get_element(target_id)
-  print(base_floor.Name)
-  view_list = FilteredElementCollector(doc).OfClass(ViewPlan).ToElements()
-  for view in view_list:
-    if view.Id.ToString() == target_id: continue
-    if view.IsTemplate == True:
-      # print("This is a template: ", view.Name)
-      continue
-    # Discipline
-    disci = view.LookupParameter("View Type")
-    if disci.AsValueString() != view_type: continue
 
-    # Subdiscipline
-    type = view.LookupParameter("Type")
-    if type.AsValueString() != view_discipline: continue
+  detail_groups = FilteredElementCollector(doc, base_floor.Id).OfCategory(BuiltInCategory.OST_IOSDetailGroups).ToElements()
+
+  for dg in detail_groups: 
+    dg_ids = dg.GetMemberIds()
+
+    room_curve = get_room_curve(dg_ids)
+    print(dg.Name, room_curve)
 
 
-    view.CropBox = base_floor.get_CropBox()
-    view.CropBoxActive = True
-    print()
-    # break
+
+    filled_region_id = ElementId(3786335)
+    filled_region = FilledRegion.Create(doc, filled_region_id, base_floor.Id, [room_curve])
+    filled_region.LookupParameter("Comments").Set(dg.Name)
 
 start()
+print("\n\n\n")
 
-OUT = output.getvalue() 
+OUT = output.getvalue()
