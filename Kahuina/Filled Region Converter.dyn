@@ -4,7 +4,12 @@
   "Description": "",
   "Name": "Filled Region Converter",
   "ElementResolver": {
-    "ResolutionMap": {}
+    "ResolutionMap": {
+      "DateTime.Now": {
+        "Key": "DSCore.DateTime",
+        "Value": "DSCoreNodes.dll"
+      }
+    }
   },
   "Inputs": [],
   "Outputs": [],
@@ -32,7 +37,7 @@
     {
       "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
       "NodeType": "PythonScriptNode",
-      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, IndependentTag,FilledRegion, CurveLoop, DetailLine, BuiltInCategory \r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, ViewType, XYZ, ViewPlan, ElementId, Electrical\r\n\r\nclr.AddReference('System')\r\nfrom System.Collections.Generic import List\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nactive_view = doc.ActiveView\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n\r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\ndef get_element(id):\r\n  if isinstance(id, str):\r\n    return doc.GetElement(ElementId(id))\r\n  elif isinstance(id, ElementId):\r\n    return doc.GetElement(id)\r\n  return None\r\n\r\ndef get_element_via_parameter(elements, parameter_name, parameter_value):\r\n    result = []\r\n    for el in elements:\r\n        param_ViewType = el.GetParameters(parameter_name)[0]\r\n        if param_ViewType.AsValueString() == parameter_value:\r\n            result.append(el)\r\n            continue\r\n    return result\r\n\r\n\r\ndef get_room_curve(group_elements):\r\n  room_curve = CurveLoop()\r\n  for id in group_elements:\r\n    e = doc.GetElement(id)\r\n    if isinstance(e, DetailLine):\r\n      line = e.GeometryCurve\r\n      room_curve.Append(line)\r\n  return room_curve\r\n \r\n\r\ntarget_id = \"1771702\"\r\n\r\nfloor_views = {}\r\n\r\n@transaction \r\ndef start():\r\n  base_floor = get_element(target_id)\r\n\r\n  detail_groups = FilteredElementCollector(doc, base_floor.Id).OfCategory(BuiltInCategory.OST_IOSDetailGroups).ToElements()\r\n\r\n  for dg in detail_groups: \r\n    dg_ids = dg.GetMemberIds()\r\n\r\n    room_curve = get_room_curve(dg_ids)\r\n    print(dg.Name, room_curve)\r\n\r\n\r\n\r\n    filled_region_id = ElementId(3786335)\r\n    filled_region = FilledRegion.Create(doc, filled_region_id, base_floor.Id, [room_curve])\r\n    filled_region.LookupParameter(\"Comments\").Set(dg.Name)\r\n\r\nstart()\r\nprint(\"\\n\\n\\n\")\r\n\r\nOUT = output.getvalue()",
+      "Code": "import clr\r\nimport math, sys\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, IndependentTag,FilledRegion, CurveLoop, DetailLine, BuiltInCategory \r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import Dimension, ViewType, XYZ, ViewPlan, ElementId, Electrical\r\n\r\nclr.AddReference('System')\r\nfrom System.Collections.Generic import List\r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nactive_view = doc.ActiveView\r\n\r\ndef transaction(func):\r\n    def wrapper(*args, **kwargs):\r\n            TransactionManager.Instance.EnsureInTransaction(doc)\r\n            func(*args, **kwargs)\r\n            TransactionManager.Instance.TransactionTaskDone()\r\n    return wrapper\r\n\r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n      print(i)\r\n\r\ndef get_element(id):\r\n  if isinstance(id, str):\r\n    return doc.GetElement(ElementId(id))\r\n  elif isinstance(id, ElementId):\r\n    return doc.GetElement(id)\r\n  return None\r\n\r\ndef get_element_via_parameter(elements, parameter_name, parameter_value):\r\n    result = []\r\n    for el in elements:\r\n        param_ViewType = el.GetParameters(parameter_name)[0]\r\n        if param_ViewType.AsValueString() == parameter_value:\r\n            result.append(el)\r\n            continue\r\n    return result\r\n\r\n\r\ndef get_room_curve(group_elements):\r\n  room_curve = CurveLoop()\r\n  for id in group_elements:\r\n    e = doc.GetElement(id)\r\n    if isinstance(e, DetailLine):\r\n      line = e.GeometryCurve\r\n      room_curve.Append(line)\r\n  return room_curve\r\n \r\n\r\n\r\n\r\nfloor_views = {}\r\n\r\n@transaction \r\ndef start():\r\n  base_floor = active_view\r\n\r\n  detail_groups = FilteredElementCollector(doc, base_floor.Id).OfCategory(BuiltInCategory.OST_IOSDetailGroups).ToElements()\r\n\r\n  for dg in detail_groups: \r\n    dg_ids = dg.GetMemberIds()\r\n\r\n    room_curve = get_room_curve(dg_ids)\r\n    print(dg.Name, room_curve)\r\n\r\n\r\n\r\n    filled_region_id = ElementId(3786335)\r\n    filled_region = FilledRegion.Create(doc, filled_region_id, base_floor.Id, [room_curve])\r\n    filled_region.LookupParameter(\"Comments\").Set(dg.Name)\r\n    doc.Delete(dg.Id)\r\n\r\nstart()\r\nprint(\"\\n\\n\\n\")\r\n\r\nOUT = output.getvalue()",
       "Engine": "CPython3",
       "VariableInputPorts": true,
       "Id": "b6c4443bafad485b8e4285f174d39dcc",
@@ -189,8 +194,8 @@
       }
     ],
     "Annotations": [],
-    "X": -553.49305811353406,
-    "Y": 46.845206308321792,
+    "X": -544.49305811353406,
+    "Y": 53.845206308321792,
     "Zoom": 0.97139296252423413
   }
 }

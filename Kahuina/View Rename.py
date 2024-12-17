@@ -55,7 +55,7 @@ def get_element_via_parameter(elements, parameter_name, parameter_value):
 view_type = "Utility Views"
 
 # view_discipline = "Electrical"
-view_discipline = "Dynamo Target Plans"
+view_discipline = "Dynamo Copy Plan"
 # view_discipline = "Power"
 
 
@@ -65,7 +65,7 @@ def start():
   view_list = FilteredElementCollector(doc).OfClass(ViewPlan).ToElements()
   for view in view_list:
     if view.IsTemplate == True:
-      print("This is a template: ", view.Name)
+      # print("This is a template: ", view.Name)
       continue
     # Discipline
     # Discipline
@@ -75,9 +75,16 @@ def start():
     # Subdiscipline
     subdisci = view.LookupParameter("Type")
     if subdisci.AsValueString() != view_discipline: continue
+    
+    if view.Name == "LEVEL 4A Base Crop": continue
 
+    # name = view.Name.split(" ")
+    # unity_type = name[2].replace("(", "").strip()
 
-    new_name = view.Name.replace("LEVEL", "Dynamo Level")
+    # unit_nums = list(name[1].strip())
+    # new_unit_no = f"{unit_nums[0]}{unit_nums[1]} ({unit_nums[2]}{unit_nums[3]} {unity_type}"
+
+    # new_name = f"Dynamo Crop Unit {new_unit_no}"
 
 
 
@@ -92,8 +99,8 @@ def start():
     # if "-L" in view.Name: continue
     # name = view.Name.split("-")[0].strip()
     # name = f"{name}-{suffix}"
-    view.Name = new_name
-    print(new_name)
+    view.Name = view.Name.replace(" D", "")
+    print(view.Name)
 
 start()
 

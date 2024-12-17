@@ -1,5 +1,5 @@
 import clr
-import math
+import math, sys
 from io import StringIO
 
 import Autodesk
@@ -63,13 +63,13 @@ def get_room_curve(group_elements):
   return room_curve
  
 
-target_id = "1657348"
+
 
 floor_views = {}
 
 @transaction 
 def start():
-  base_floor = get_element(target_id)
+  base_floor = active_view
 
   detail_groups = FilteredElementCollector(doc, base_floor.Id).OfCategory(BuiltInCategory.OST_IOSDetailGroups).ToElements()
 
@@ -84,6 +84,7 @@ def start():
     filled_region_id = ElementId(3786335)
     filled_region = FilledRegion.Create(doc, filled_region_id, base_floor.Id, [room_curve])
     filled_region.LookupParameter("Comments").Set(dg.Name)
+    doc.Delete(dg.Id)
 
 start()
 print("\n\n\n")

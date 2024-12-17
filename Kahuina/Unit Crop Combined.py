@@ -5,11 +5,11 @@ from io import StringIO
 import Autodesk
 import RevitServices
 from Autodesk.Revit.DB import *
-from Autodesk.Revit.DB import FilteredElementCollector, ViewPlan,BuiltInParameter, BuiltInCategory, ElementTransformUtils, FamilyInstance
+from Autodesk.Revit.DB import FilteredElementCollector, ViewPlan,ViewDuplicateOption, BuiltInCategory, ElementTransformUtils, FamilyInstance
 
 from RevitServices.Persistence import DocumentManager
 from RevitServices.Transactions import TransactionManager
-from Autodesk.Revit.DB import CurveLoop, DetailLine, XYZ, ViewDuplicateOption, ElementId, Electrical
+from Autodesk.Revit.DB import CurveLoop, DetailLine, XYZ, FilledRegion, ElementId, Electrical
 
 clr.AddReference('System')
 from System.Collections.Generic import  IList 
@@ -80,9 +80,7 @@ def get_room_curve(group_elements):
   return room_curve
  
 
-def get_view_range(target_view_type, target_discipline, range_value):
-    min_range = range_value[0]
-    max_range = range_value[1]
+def get_view_range(target_view_type, target_discipline, range_value=None):
     result = []
     view_list = FilteredElementCollector(doc).OfClass(ViewPlan).ToElements()
     for view in view_list:
@@ -92,28 +90,34 @@ def get_view_range(target_view_type, target_discipline, range_value):
         discipline = view.LookupParameter("Type").AsValueString()
         if discipline != target_discipline: continue
 
-        level = get_num(view.Name)
-        if min_range <= level <= max_range:
-            # print(view.Name, level)
+        if range_value:
+          min_range = range_value[0]
+          max_range = range_value[1]
 
-            result.append(view)
+          level = get_num(view.Name)
+          if min_range <= level <= max_range:
+              result.append(view)
+              continue
+          
+        else:
+          result.append(view)
+          continue
+          
     return result
 
 class UnitDetail:
 
-  def __init__(self, min, max, pos, typical=False):
+  def __init__(self, min, max, pos, exclude=[]):
     self.min = min
     self.max = max
     self.pos = pos
-    self.typical = typical
+    self.exclude = exclude
 
 
 prefixes = {
   "Lighting": "L",
-  "Power": "P",
-  "Data": "D",
-  "Infrastructure": "I",
-  "Device": "DP",
+  # "Infrastructure": "I",
+  # "Device": "DP",
 }
 
 range_value = [4, 43]
@@ -123,82 +127,81 @@ do_delete = UnwrapElement(IN[1])
 
 # Range which the units appear
 matrix = {
-  "01 A-2A": UnitDetail(4, 31, {}, True),
-  "02 A-2B": UnitDetail(4, 31, {}, True),
-  "03 A-2BR": UnitDetail(4, 37, {}, True),
-  "04 A-2AR": UnitDetail(4, 37, {}, True),
-  "05 A-1BR": UnitDetail(4, 35, {}, True),
-  "06 A-1B": UnitDetail(4, 35, {}, True),
-  "07 A-2A": UnitDetail(4, 34, {}, True),
-  "08 A-2B": UnitDetail(4, 34, {}, True),
-  "09 A-2BR": UnitDetail(4, 38, {35: "08", 36: "07", 37: "07", 38: "06"}, True),
-  "10 A-2AR": UnitDetail(4, 38, {35: "09", 36: "08", 37: "08", 38: "07"}, True),
-  "11 A-1AR": UnitDetail(4, 36, {35: "10", 36: "09",}, True),
-  "12 A-1A": UnitDetail(4, 31, {}, True),
-  "01 A-3E": UnitDetail(32, 32, {}),
+  # Level 4A Base
+  "01 A-2A": UnitDetail(4, 31, {}),
+  "02 A-2B": UnitDetail(4, 31, {}),
+  "03 A-2BR": UnitDetail(4, 37, {}),
+  "04 A-2AR": UnitDetail(4, 37, {}),
+  "05 A-1BR": UnitDetail(4, 35, {}),
+  "06 A-1B": UnitDetail(4, 35, {}),
+  "07 A-2A": UnitDetail(4, 34, {}),
+  "08 A-2B": UnitDetail(4, 34, {}),
+  "09 A-2BR": UnitDetail(4, 38, {35: "08", 36: "07", 37: "07", 38: "06"}),
+  "10 A-2AR": UnitDetail(4, 38, {35: "09", 36: "08", 37: "08", 38: "07"}),
+  "11 A-1AR": UnitDetail(4, 36, {35: "10", 36: "09",}, [32]),
+  "12 A-1A": UnitDetail(4, 31, {}),
+
+  # Level 32
   "02 A-2B.1": UnitDetail(32, 32, {}),
+  "01 A-3E": UnitDetail(32, 32, {}),
+
+  # Level 33
+  "02 A-2D.3": UnitDetail(33, 36, {}),
   "01 A-1C": UnitDetail(33, 36, {}),
-  "02 A-2D": UnitDetail(33, 42, {}),
+
+  # Level 35
   "07 A-3B": UnitDetail(35, 35, {}),
+
+  # Level 36
   "05 A-3F": UnitDetail(36, 36, {}),
+  "06 A-2B.1": UnitDetail(36, 36, {}),
+
+  # Level 37
   "01 A-3D": UnitDetail(37, 39, {}),
+  "02 A-2D.1": UnitDetail(37, 39, {}),
   "05 A-3G": UnitDetail(37, 37, {}),
+  "06 A-2D.1": UnitDetail(37, 37, {}),
+
+  # Level 38
   "03 A-2BR.1": UnitDetail(38, 38, {}),
   "04 A-3H": UnitDetail(38, 38, {}),
+  "05 A-2D.2": UnitDetail(38, 39, {}),
+
+  # Level 39
+  "03 A-2DR.1": UnitDetail(39, 39, {}),
   "04 A-3A": UnitDetail(39, 43, {43: "03",}),
   "06 A-3BR": UnitDetail(39, 39, {}),
-  "01 A-3J": UnitDetail(40, 40, {}),
-  "06 A-2BR.2": UnitDetail(40, 40, {}),
-  "01 A-3DR": UnitDetail(41, 43, {}),
-  "03 A-2DR": UnitDetail(39, 42, {}),
-  "02 A-3C": UnitDetail(43, 43, {}),
-  "04 A-3C": UnitDetail(43, 43, {}),
-  "06 A-2D": UnitDetail(37, 42, {38: "05", 39: "05",  40: "05", 41: "05", 42: "05"}),
-  "06 A-2B.1": UnitDetail(36, 36, {}),
-}
 
-crop_detail_group = [
-  # from floor plan id 1581961 (TYPICAL 4-31)
-  1582090,1582509,1582895,1583204,1583340,1583377,1583416,1583456,1583499,1583535,1583572,1583609,
-  1760509, # 01 A-3E
-  1771674, # 02 A-2B.1
-  1771810, # 01 A-1C
-  1783480, # 02 A-2D
-  1785457, # 07 A-3B
-  1799377, # 05 A-3F
-  1834883, # 01 A-3D
-  1836240, # 05 A-3G
-  1953214, # 03 A-2BR.1
-  1957088, # 04 A-3H
-  1957685, # 04 A-3A
-  1960991, # 06 A-3BR
-  1964094, # 01 A-3J
-  1964189, # 06 A-2BR.2
-  1965610, # 01 A-3DR
-  1965674, # 03 A-2DR
-  1967224, # 02 A-3C
-  1969196, # 04 A-3C
-  2058782, # 06 A-2B.1
-  2024228, # 06 A-2D
-]
+  # Level 40
+  "01 A-3J": UnitDetail(40, 40, {}),
+  "02 A-2D": UnitDetail(40, 42, {}),
+  "03 A-2DR": UnitDetail(40, 42, {}),
+  "05 A-2D": UnitDetail(40, 42, {}),
+  "06 A-2BR.2": UnitDetail(40, 40, {}),
+
+  # Level 41
+  "01 A-3DR": UnitDetail(41, 43, {}),
+  "06 A-2DR": UnitDetail(41, 42, {}),
+
+  # Level 43
+  "02 A-3C": UnitDetail(43, 43, {}),
+  "04 A-3C": UnitDetail(43, 43, {}),  
+}
 
 @transaction 
 def start():
-  # detail_groups = FilteredElementCollector(doc, base_view.Id).OfCategory(BuiltInCategory.OST_IOSDetailGroups).ToElements()
 
-  detail_groups = get_elements(crop_detail_group)
   curve_dict = {}
-  for dg in detail_groups:
-    if not dg: continue
-    group_elements = dg.GetMemberIds()
-    element = ""
-    try:
-      element = get_room_curve(group_elements)
-    except Exception as e:
-      print("Error: ", dg.Name)
-      raise MyException(f"[{dg.Name}] is broken.\n\n{e}")
+  crop_plans = get_view_range("Utility Views", "Dynamo Crop Plan")
+  for crop_view in crop_plans:
+    
+    filled_region_list = FilteredElementCollector(doc, crop_view.Id).OfClass(FilledRegion).ToElements()
+    for filreg in filled_region_list:
+      name = filreg.LookupParameter("Comments").AsValueString()
+      crop_shape = filreg.GetBoundaries()[0]
+      print(name, crop_shape)
+      curve_dict[name] = crop_shape
 
-    curve_dict[dg.Name] = element
 
   for target_discipline in prefixes:
     prefix = prefixes[target_discipline]
@@ -223,6 +226,8 @@ def start():
 
         # Only copies within the range
         if matrix[unit_name].min <= level <= matrix[unit_name].max:
+          if level in matrix[unit_name].exclude:
+            continue
           # Duplicate
           new_plan = plan_view.Duplicate(ViewDuplicateOption.AsDependent)
           dupli_view = doc.GetElement(new_plan)
@@ -247,7 +252,7 @@ def start():
           # Set Grids
           # detail_groups = FilteredElementCollector(doc, base_view.Id).OfCategory(BuiltInCategory.OST_IOSDetailGroups).ToElements()
 
-    # break
+    break
 
 
 
