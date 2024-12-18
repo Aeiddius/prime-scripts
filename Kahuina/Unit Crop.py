@@ -37,7 +37,7 @@ def print_member(obj):
     print(i)
 
 def get_element(id):
-  if isinstance(id, str):
+  if isinstance(id, str) or isinstance(id, int):
     return doc.GetElement(ElementId(id))
   elif isinstance(id, ElementId):
     return doc.GetElement(id)

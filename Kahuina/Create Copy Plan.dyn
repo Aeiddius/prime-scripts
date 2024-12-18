@@ -1,0 +1,304 @@
+{
+  "Uuid": "61a5c8c2-e2e0-4517-b2bc-48e9a0accf04",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "Create Copy Plan",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import clr\r\nimport math\r\nfrom io import StringIO\r\n\r\nimport Autodesk\r\nimport RevitServices\r\nfrom Autodesk.Revit.DB import *\r\nfrom Autodesk.Revit.DB import FilteredElementCollector, ViewPlan,ViewDuplicateOption , BuiltInCategory, ElementTransformUtils, FamilyInstance\r\n\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\nfrom Autodesk.Revit.DB import CurveLoop, DetailLine, XYZ, FilledRegion, ElementId, Electrical\r\n\r\nclr.AddReference('System')\r\nfrom System.Collections.Generic import  IList \r\n\r\nclr.AddReference(\"RevitAPI\")\r\nclr.AddReference(\"RevitServices\")\r\n\r\nclass MyException(Exception):\r\n    pass\r\n\r\n# For Outputting print to watch node\r\noutput = StringIO()\r\nsys.stdout = output\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\nactive_view = doc.ActiveView\r\n\r\ndef transaction(func):\r\n  def wrapper(*args, **kwargs):\r\n      TransactionManager.Instance.EnsureInTransaction(doc)\r\n      func(*args, **kwargs)\r\n      TransactionManager.Instance.TransactionTaskDone()\r\n  return wrapper\r\n\r\ndef print_member(obj):\r\n  for i in dir(obj):\r\n    print(i)\r\n\r\ndef get_element(id):\r\n  if isinstance(id, str):\r\n    return doc.GetElement(ElementId(id))\r\n  elif isinstance(id, ElementId):\r\n    return doc.GetElement(id)\r\n  return None\r\n\r\ndef get_elements(ids):\r\n  elements = []\r\n  if all(isinstance(item, ElementId) for item in ids):\r\n    for id in ids:\r\n      elements.append(doc.GetElement(id))\r\n  if all(isinstance(item, int) for item in ids):\r\n    for id in ids:\r\n      x = doc.GetElement(ElementId(id))\r\n      elements.append(x)\r\n  return elements\r\n\r\ndef get_element_via_parameter(elements, parameter_name, parameter_value):\r\n  result = []\r\n  for el in elements:\r\n    param_ViewType = el.GetParameters(parameter_name)[0]\r\n    if param_ViewType.AsValueString() == parameter_value:\r\n      result.append(el)\r\n      continue\r\n  return result\r\n\r\ndef get_num(str):\r\n  res = ''.join(char for char in str if char.isdigit())\r\n  if res:\r\n    return int(res)\r\n  else: return None\r\n\r\n\r\ndef get_room_curve(group_elements):\r\n  room_curve = CurveLoop()\r\n  for id in group_elements:\r\n    e = doc.GetElement(id)\r\n    if isinstance(e, DetailLine):\r\n      line = e.GeometryCurve\r\n      room_curve.Append(line)\r\n  return room_curve\r\n \r\n\r\ndef get_view_range(target_view_type, target_discipline, range_value=None):\r\n    result = []\r\n    view_list = FilteredElementCollector(doc).OfClass(ViewPlan).ToElements()\r\n    for view in view_list:\r\n        view_type = view.LookupParameter(\"View Type\").AsValueString()\r\n        if view_type != target_view_type: continue\r\n\r\n        discipline = view.LookupParameter(\"Type\").AsValueString()\r\n        if discipline != target_discipline: continue\r\n\r\n        if range_value:\r\n          min_range = range_value[0]\r\n          max_range = range_value[1]\r\n\r\n          level = get_num(view.Name)\r\n          if min_range <= level <= max_range:\r\n              result.append(view)\r\n              continue\r\n          \r\n        else:\r\n          result.append(view)\r\n          continue\r\n          \r\n    return result\r\n\r\n\r\n@transaction \r\ndef start():\r\n    # Types\r\n    floor_type = ElementId(1969664)\r\n    view_template = ElementId(2921754)\r\n\r\n    # Get levels\r\n    source_views = get_view_range(\"Utility Views\", \"Dynamo Crop Plan\")\r\n    for view in source_views:\r\n      if \"Level 4A\" not in view.Name:  continue\r\n      new_view = ViewPlan.Create(doc, floor_type, view.GenLevel.Id)\r\n\r\n \r\n      new_view.ViewTemplateId = view_template\r\n      new_view.Name = view.Name.replace(\"D_Crop\", \"W_Device\")\r\n      new_view.CropBoxVisible = True\r\n      new_view.CropBoxActive = True\r\n      # break \r\n      if \"Level 4A\" in view.Name: \r\n          \r\n          filled_region_list = FilteredElementCollector(doc, view.Id).OfClass(FilledRegion).ToElements()\r\n          for filreg in filled_region_list:\r\n            dupli_id = new_view.Duplicate(ViewDuplicateOption.AsDependent)\r\n            dupli_view = get_element(dupli_id)\r\n            crop_shape = filreg.GetBoundaries()[0]\r\n            crop_manager = dupli_view.GetCropRegionShapeManager()\r\n            crop_manager.SetCropShape(crop_shape)\r\n\r\n            name = filreg.LookupParameter(\"Comments\").AsValueString()\r\n            dupli_view.Name = f\"W_Device Unit 04 ({name})\"\r\n          continue\r\n    \r\n      filreg = FilteredElementCollector(doc, view.Id).OfClass(FilledRegion).ToElements()\r\n      crop_shape = filreg[0].GetBoundaries()[0]\r\n      crop_manager = new_view.GetCropRegionShapeManager()\r\n      crop_manager.SetCropShape(crop_shape)\r\n\r\n      # print(crop_manager.GetCropShape())\r\n      # break\r\nstart()\r\n\r\nOUT = output.getvalue()\r\n\r\n\r\n\r\n",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "61b5c91169cb4263948acd738f1b17d2",
+      "Inputs": [
+        {
+          "Id": "88446cee7ba04b2ea55dd61ea694888a",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "4316ebcf191a4cfab8a2d8930410528b",
+          "Name": "IN[1]",
+          "Description": "Input #1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "3cdcde1cbc0549f198752c45b35df58a",
+          "Name": "IN[2]",
+          "Description": "Input #2",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "7a25ff87ab6943319715766bd46d592e",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "08f00b8aec4d4d91829c31d26e54b917",
+      "Inputs": [
+        {
+          "Id": "4035d255bd6b4c5b9724c87d87d2bc3a",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "f25cfda59fe846b6a4f047fa9a2ebc22",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualize the node's output"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.BoolSelector, CoreNodeModels",
+      "NodeType": "BooleanInputNode",
+      "InputValue": true,
+      "Id": "243f10d4633a41bea7c1e062bedc229f",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "ee1ed0634c5640e29d384520e650ffb8",
+          "Name": "",
+          "Description": "Boolean",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Selection between a true and false."
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "// target_view_type\n\"Presentation Views\";\n\"Working Views\";\n\"Base Views\";\n\n// Discipline\n\"Lighting\";\n\"Power\";\n\"Data\";\n\"Infrastructure\";\n\"Device\";",
+      "Id": "aa97001aec1440829359244471bc226a",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "bd6759b5ca004b338e10fb39dd03e2b5",
+          "Name": "",
+          "Description": "Value of expression at line 2",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "56035d622e0b4890baef4efdae49cd13",
+          "Name": "",
+          "Description": "Value of expression at line 3",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "7b8bdff6a80c4106adf50394b7d57073",
+          "Name": "",
+          "Description": "Value of expression at line 4",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "c2441ddf6b0a4e70b385c8d971c30e1e",
+          "Name": "",
+          "Description": "Value of expression at line 7",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "5bbfc7f1a6564749a40b4fabff107a28",
+          "Name": "",
+          "Description": "Value of expression at line 8",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "9970263632ea4a5aa6d0027a6b6e833c",
+          "Name": "",
+          "Description": "Value of expression at line 9",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "9d9a9368580145d2a13f9cbd3703d1e7",
+          "Name": "",
+          "Description": "Value of expression at line 10",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "1b31c75709924ef0802ccbec838ce638",
+          "Name": "",
+          "Description": "Value of expression at line 11",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows for DesignScript code to be authored directly"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "7a25ff87ab6943319715766bd46d592e",
+      "End": "4035d255bd6b4c5b9724c87d87d2bc3a",
+      "Id": "1d53bc468f044853ba2db3a1b7bbb921",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "ee1ed0634c5640e29d384520e650ffb8",
+      "End": "4316ebcf191a4cfab8a2d8930410528b",
+      "Id": "5566dc9a92554796b91854c286fe0221",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "bd6759b5ca004b338e10fb39dd03e2b5",
+      "End": "88446cee7ba04b2ea55dd61ea694888a",
+      "Id": "7f43d08cb25c467593ce968272a00651",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "2.13",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.13.1.3887",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Name": "Unit Crop Combined.py",
+        "ShowGeometry": true,
+        "Id": "61b5c91169cb4263948acd738f1b17d2",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 90.937281122488116,
+        "Y": -55.702440673764158
+      },
+      {
+        "Name": "Watch",
+        "ShowGeometry": true,
+        "Id": "08f00b8aec4d4d91829c31d26e54b917",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 401.98998178537136,
+        "Y": -98.361935627006289
+      },
+      {
+        "Name": "To delete?",
+        "ShowGeometry": true,
+        "Id": "243f10d4633a41bea7c1e062bedc229f",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -253.32097633359683,
+        "Y": 105.4946894719285
+      },
+      {
+        "Name": "Code Block",
+        "ShowGeometry": true,
+        "Id": "aa97001aec1440829359244471bc226a",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -254.07318305211203,
+        "Y": -225.3347018570297
+      }
+    ],
+    "Annotations": [],
+    "X": 301.17511797191742,
+    "Y": 311.24716045412862,
+    "Zoom": 0.843301393970705
+  }
+}

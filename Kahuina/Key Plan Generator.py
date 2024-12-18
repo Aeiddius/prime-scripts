@@ -1,15 +1,16 @@
 import clr
 import math
 from io import StringIO
-
+from pprint import pprint
 import Autodesk
 import RevitServices
 from Autodesk.Revit.DB import *
-from Autodesk.Revit.DB import FilteredElementCollector, IndependentTag,FilledRegion, BuiltInCategory, ElementTransformUtils, FamilyInstance
+from Autodesk.Revit.DB import FilteredElementCollector, ViewDuplicateOption,FilledRegion, CopyPasteOptions, ElementTransformUtils, FamilyInstance
 
 from RevitServices.Persistence import DocumentManager
 from RevitServices.Transactions import TransactionManager
-from Autodesk.Revit.DB import Dimension, ViewType, XYZ, ViewPlan, ElementId, Electrical
+from Autodesk.Revit.DB import Dimension, ViewType, XYZ, ViewPlan, ElementId, Transform
+from System.Collections.Generic import List
 
 clr.AddReference('System')
 from System.Collections.Generic import List
@@ -37,7 +38,7 @@ def print_member(obj):
       print(i)
 
 def get_element(id):
-  if isinstance(id, str):
+  if isinstance(id, str) or isinstance(id, int):
     return doc.GetElement(ElementId(id))
   elif isinstance(id, ElementId):
     return doc.GetElement(id)
@@ -52,6 +53,37 @@ def get_element_via_parameter(elements, parameter_name, parameter_value):
             continue
     return result
 
+def get_num(str):
+  res = ''.join(char for char in str if char.isdigit())
+  if res:
+    return int(res)
+  else: return None
+
+def get_view_range(target_view_type, target_discipline, range_value=None):
+    result = []
+    view_list = FilteredElementCollector(doc).OfClass(ViewPlan).ToElements()
+    for view in view_list:
+        view_type = view.LookupParameter("View Type").AsValueString()
+        if view_type != target_view_type: continue
+
+        discipline = view.LookupParameter("Type").AsValueString()
+        if discipline != target_discipline: continue
+
+        if range_value:
+          min_range = range_value[0]
+          max_range = range_value[1]
+
+          level = get_num(view.Name)
+          if min_range <= level <= max_range:
+              result.append(view)
+              continue
+          
+        else:
+          result.append(view)
+          continue
+          
+    return result
+
 view_type = "Presentation Views"
 view_discipline = "Device"
 
@@ -60,14 +92,17 @@ target_id = "1363645"
 floor_views = {}
 
 @transaction 
-def start():
-  base_floor = get_element(target_id)
-  cb = base_floor.CropBox
-
+def start_generate_views():
+  # Delete
+  original_views = get_view_range("Key Plan", "key Plan")
+  for i in original_views:
+     doc.Delete(i.Id)
+     
+  # Create
   view_list = FilteredElementCollector(doc).OfClass(ViewPlan).ToElements()
+  # Get Key plan data
   for view in view_list:
     if view.IsTemplate == True:
-      # print("This is a template: ", view.Name)
       continue
 
     if not "Dependent " in view.LookupParameter("Dependency").AsValueString():
@@ -82,13 +117,16 @@ def start():
     primary_view_id = view.GetPrimaryViewId()
 
     if primary_view_id not in floor_views:
-       floor_views[primary_view_id] = []
+      floor_views[primary_view_id] = []
     
     floor_views[primary_view_id].append(view)
 
+  # Text Notes
+  # text_notes_id = List[ElementId]([ElementId(str_id) for str_id in [2721338,2721340,2721351,2721362,2721552,2721553,2721554,2721555,2721556,2721576,2721893,2721894]])
+
+  # Create key plans
   for floor_id in floor_views:
     main_floor = get_element(floor_id)
-    print(main_floor)
     duplicated_plan = ViewPlan.Create(doc, ElementId(1942334) , main_floor.GenLevel.Id) # 1942323 Key Plan Floor type
     duplicated_plan.ViewTEmplateId = ElementId(1942323) # Key Plan View Template
 
@@ -97,18 +135,58 @@ def start():
     duplicated_plan.CropBoxVisible = False
 
     duplicated_plan.Name = "KEY PLAN " + main_floor.Name.replace("-DP", "").replace("LEVEL", "").strip()
-    # for view in view_list[]
+  
+    duplicated_plan.LookupParameter("View Group").Set("Tower A")
 
-    # break
+    # copied_ids = ElementTransformUtils.CopyElements(
+    #   get_element(1942310), 
+    #   text_notes_id,
+    #   duplicated_plan, 
+    #   Transform.Identity,
+    #   CopyPasteOptions()
+    # )   
 
+    # Create filled region
     for view in floor_views[floor_id]:
         boundary = view.GetCropRegionShapeManager()
         crop_shape = boundary.GetCropShape()
         filled_region_id = ElementId(1964523)
         filled_region = FilledRegion.Create(doc, filled_region_id, duplicated_plan.Id, crop_shape)
-        filled_region.LookupParameter("Comments").Set(view.Name)
-    break
-start()
-print("\n\n\n")
+        filled_region.LookupParameter("Comments").Set(view.Name.replace("UNIT", "KP"))
+
+    # test = FilteredElementCollector.OfCategory(BuiltInCategory.OST_DetailComponents).ToElements()
+
+    # print(test)
+
+
+@transaction 
+def start_generate_subkp():
+  view_list = get_view_range("Key Plan", "Key Plan")
+  for keyplan_view in view_list:
+    if "4-31A" in keyplan_view.Name: continue
+    if "Dependent " in keyplan_view.LookupParameter("Dependency").AsValueString():
+        continue
+    print(keyplan_view.Name)
+
+    # Get Filled Region
+    filled_reg = FilteredElementCollector(doc, keyplan_view.Id).OfClass(FilledRegion).ToElements()
+    filreg_dict = {}
+    for freg in filled_reg:
+        name = freg.LookupParameter("Comments").AsValueString()
+        filreg_dict[name] = freg
+
+    # Generate dependetn view
+    for freg in filreg_dict:
+      to_hide = List[ElementId]([filreg_dict[i].Id for i in filreg_dict if i != freg])
+      for prefix in ["DP", "L", "KB"]:
+        dupli_id = keyplan_view.Duplicate(ViewDuplicateOption.AsDependent)
+        dupli_view = get_element(dupli_id)
+        dupli_view.Name = f"{freg}-{prefix}"
+        dupli_view.HideElements(to_hide)
+
+
+
+start_generate_views()
+# start_generate_subkp()
 
 OUT = output.getvalue()

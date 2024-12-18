@@ -39,7 +39,7 @@ def print_member(obj):
     print(i)
 
 def get_element(id):
-  if isinstance(id, str):
+  if isinstance(id, str) or isinstance(id, int):
     return doc.GetElement(ElementId(id))
   elif isinstance(id, ElementId):
     return doc.GetElement(id)
@@ -115,15 +115,14 @@ class UnitDetail:
 
 
 prefixes = {
-  "Lighting": "L",
-  # "Infrastructure": "I",
+  # "Lighting": "L",
+  "Infrastructure": "I",
   # "Device": "DP",
 }
 
 range_value = [4, 43]
 
-target_view_type = UnwrapElement(IN[0])
-do_delete = UnwrapElement(IN[1])
+do_delete = UnwrapElement(IN[0])
 
 # Range which the units appear
 matrix = {
@@ -205,7 +204,7 @@ def start():
 
   for target_discipline in prefixes:
     prefix = prefixes[target_discipline]
-    target_views = get_view_range(target_view_type, target_discipline, range_value)
+    target_views = get_view_range("Presentation Views", target_discipline, range_value)
     
     print("Asds")
     # Apply copy crop
@@ -252,7 +251,7 @@ def start():
           # Set Grids
           # detail_groups = FilteredElementCollector(doc, base_view.Id).OfCategory(BuiltInCategory.OST_IOSDetailGroups).ToElements()
 
-    break
+
 
 
 
