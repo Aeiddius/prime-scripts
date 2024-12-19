@@ -5,11 +5,11 @@ from pprint import pprint
 import Autodesk
 import RevitServices
 from Autodesk.Revit.DB import *
-from Autodesk.Revit.DB import FilteredElementCollector, ViewDuplicateOption,FilledRegion, CopyPasteOptions, ElementTransformUtils, FamilyInstance
+from Autodesk.Revit.DB import FilteredElementCollector, BuiltInCategory , ViewDuplicateOption,FilledRegion, CopyPasteOptions, ElementTransformUtils, FamilyInstance
 
 from RevitServices.Persistence import DocumentManager
 from RevitServices.Transactions import TransactionManager
-from Autodesk.Revit.DB import Dimension, ViewType, XYZ, ViewPlan, ElementId, Transform
+from Autodesk.Revit.DB import Dimension, OverrideGraphicSettings , XYZ, ViewPlan, ElementId, Transform
 from System.Collections.Generic import List
 
 clr.AddReference('System')
@@ -63,6 +63,8 @@ def get_view_range(target_view_type, target_discipline, range_value=None):
     result = []
     view_list = FilteredElementCollector(doc).OfClass(ViewPlan).ToElements()
     for view in view_list:
+        if view.IsTemplate == True: continue
+
         view_type = view.LookupParameter("View Type").AsValueString()
         if view_type != target_view_type: continue
 
@@ -84,49 +86,52 @@ def get_view_range(target_view_type, target_discipline, range_value=None):
           
     return result
 
-view_type = "Presentation Views"
-view_discipline = "Device"
 
-target_id = "1363645"
+def is_dependent(view):
+  if "Dependent " in view.LookupParameter("Dependency").AsValueString():
+    return True
+  return False
 
-floor_views = {}
+@transaction 
+def start_delete():
+  # Delete
+  original_views = get_view_range("Key Plan", "Key Plan")
+  for i in original_views:
+    try:
+      doc.Delete(i.Id)
+    except Exception as e:
+      print(f"Error: {e}")
 
 @transaction 
 def start_generate_views():
-  # Delete
-  original_views = get_view_range("Key Plan", "key Plan")
-  for i in original_views:
-     doc.Delete(i.Id)
-     
-  # Create
-  view_list = FilteredElementCollector(doc).OfClass(ViewPlan).ToElements()
   # Get Key plan data
+  floor_views = {}
+  view_list = get_view_range("Presentation Views", "Lighting")
+
   for view in view_list:
-    if view.IsTemplate == True:
-      continue
-
-    if not "Dependent " in view.LookupParameter("Dependency").AsValueString():
-      continue
-
-    # View Type
-    if view.LookupParameter("View Type").AsValueString() != view_type: continue
-
-    # Discipline
-    if view.LookupParameter("Type").AsValueString() != view_discipline: continue
+    if not is_dependent(view):
+       floor_views[view.Id] = []
+       continue
     
-    primary_view_id = view.GetPrimaryViewId()
+    floor_views[view.GetPrimaryViewId()].append(view)
 
-    if primary_view_id not in floor_views:
-      floor_views[primary_view_id] = []
-    
-    floor_views[primary_view_id].append(view)
 
+ 
+  text_view = get_element(1942310)
+  text_notes = FilteredElementCollector(doc, text_view.Id).OfCategory(BuiltInCategory.OST_IOSDetailGroups).ToElements()
   # Text Notes
-  # text_notes_id = List[ElementId]([ElementId(str_id) for str_id in [2721338,2721340,2721351,2721362,2721552,2721553,2721554,2721555,2721556,2721576,2721893,2721894]])
+
+  text_notes_dict = {}
+  for textn in text_notes:
+    key = get_num(textn.Name)
+    text_notes_dict[key] = textn
 
   # Create key plans
   for floor_id in floor_views:
     main_floor = get_element(floor_id)
+    level = get_num(main_floor.Name)
+
+    if level in [1,2,3]: continue
     duplicated_plan = ViewPlan.Create(doc, ElementId(1942334) , main_floor.GenLevel.Id) # 1942323 Key Plan Floor type
     duplicated_plan.ViewTEmplateId = ElementId(1942323) # Key Plan View Template
 
@@ -134,17 +139,19 @@ def start_generate_views():
     duplicated_plan.CropBoxActive = True
     duplicated_plan.CropBoxVisible = False
 
-    duplicated_plan.Name = "KEY PLAN " + main_floor.Name.replace("-DP", "").replace("LEVEL", "").strip()
+    duplicated_plan.Name = "KEY PLAN " + main_floor.Name.replace("-L", "").replace("LEVEL", "").strip()
   
     duplicated_plan.LookupParameter("View Group").Set("Tower A")
 
-    # copied_ids = ElementTransformUtils.CopyElements(
-    #   get_element(1942310), 
-    #   text_notes_id,
-    #   duplicated_plan, 
-    #   Transform.Identity,
-    #   CopyPasteOptions()
-    # )   
+
+
+    copied_ids = ElementTransformUtils.CopyElements(
+      text_view, 
+      List[ElementId]([text_notes_dict[level].Id]),
+      duplicated_plan, 
+      Transform.Identity,
+      CopyPasteOptions()
+    )
 
     # Create filled region
     for view in floor_views[floor_id]:
@@ -154,18 +161,12 @@ def start_generate_views():
         filled_region = FilledRegion.Create(doc, filled_region_id, duplicated_plan.Id, crop_shape)
         filled_region.LookupParameter("Comments").Set(view.Name.replace("UNIT", "KP"))
 
-    # test = FilteredElementCollector.OfCategory(BuiltInCategory.OST_DetailComponents).ToElements()
-
-    # print(test)
-
-
 @transaction 
 def start_generate_subkp():
   view_list = get_view_range("Key Plan", "Key Plan")
   for keyplan_view in view_list:
-    if "4-31A" in keyplan_view.Name: continue
-    if "Dependent " in keyplan_view.LookupParameter("Dependency").AsValueString():
-        continue
+    if is_dependent(keyplan_view): continue
+
     print(keyplan_view.Name)
 
     # Get Filled Region
@@ -173,20 +174,35 @@ def start_generate_subkp():
     filreg_dict = {}
     for freg in filled_reg:
         name = freg.LookupParameter("Comments").AsValueString()
-        filreg_dict[name] = freg
+        filreg_dict[name] = freg.Id
 
-    # Generate dependetn view
+    # Get Text Notes
+    text_notes = FilteredElementCollector(doc, keyplan_view.Id).OfCategory(BuiltInCategory.OST_TextNotes).ToElements()
+
+    # Iterate through every filled region unit in a plan view
     for freg in filreg_dict:
-      to_hide = List[ElementId]([filreg_dict[i].Id for i in filreg_dict if i != freg])
+      to_hide = List[ElementId]([filreg_dict[i] for i in filreg_dict if i != freg])
+      unit_no = freg.split(" ")[1][2:4]
+
+      # Duplicate dependent views
       for prefix in ["DP", "L", "KB"]:
         dupli_id = keyplan_view.Duplicate(ViewDuplicateOption.AsDependent)
         dupli_view = get_element(dupli_id)
         dupli_view.Name = f"{freg}-{prefix}"
         dupli_view.HideElements(to_hide)
+        dupli_view.CropBoxVisible = False
 
+        # Half-tone other units
+        for textn in text_notes:
+          text = textn.Text.strip()
+          if text == unit_no: continue
+          override = OverrideGraphicSettings()
+          override.SetHalftone(True)
+          dupli_view.SetElementOverrides(textn.Id, override)
 
-
+    # break
+start_delete()
 start_generate_views()
-# start_generate_subkp()
+start_generate_subkp()
 
 OUT = output.getvalue()
