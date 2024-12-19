@@ -59,17 +59,18 @@ def get_num(str):
     return int(res)
   else: return None
 
-def get_view_range(target_view_type, target_discipline, range_value=None):
+def get_view_range(view_group, target_view_type, target_family_type, range_value=None):
     result = []
     view_list = FilteredElementCollector(doc).OfClass(ViewPlan).ToElements()
     for view in view_list:
         if view.IsTemplate == True: continue
 
-        view_type = view.LookupParameter("View Type").AsValueString()
-        if view_type != target_view_type: continue
+        
+        if view.LookupParameter("View Group").AsValueString() != view_group: continue
 
-        discipline = view.LookupParameter("Type").AsValueString()
-        if discipline != target_discipline: continue
+        if view.LookupParameter("View Type").AsValueString() != target_view_type: continue
+
+        if view.LookupParameter("Type").AsValueString() != target_family_type: continue
 
         if range_value:
           min_range = range_value[0]
@@ -92,10 +93,21 @@ def is_dependent(view):
     return True
   return False
 
+
+# Variables
+# Source Variable where the views where the key plan will use as basis 
+view_Group = "Tower A"
+target_view_type = "Presentation Views"
+target_family_type = "Lighting"
+remove_prefix = "-L"
+# The view where the text 01 02 03 are placed for all.
+master_text_view = 1942310 
+
+# Functions
 @transaction 
 def start_delete():
   # Delete
-  original_views = get_view_range("Key Plan", "Key Plan")
+  original_views = get_view_range(view_Group, "Key Plan", "Key Plan")
   for i in original_views:
     try:
       doc.Delete(i.Id)
@@ -106,7 +118,7 @@ def start_delete():
 def start_generate_views():
   # Get Key plan data
   floor_views = {}
-  view_list = get_view_range("Presentation Views", "Lighting")
+  view_list = get_view_range(view_Group, target_view_type, target_family_type)
 
   for view in view_list:
     if not is_dependent(view):
@@ -117,9 +129,9 @@ def start_generate_views():
 
 
  
-  text_view = get_element(1942310)
-  text_notes = FilteredElementCollector(doc, text_view.Id).OfCategory(BuiltInCategory.OST_IOSDetailGroups).ToElements()
   # Text Notes
+  text_view = get_element(master_text_view)
+  text_notes = FilteredElementCollector(doc, text_view.Id).OfCategory(BuiltInCategory.OST_IOSDetailGroups).ToElements()
 
   text_notes_dict = {}
   for textn in text_notes:
@@ -139,12 +151,11 @@ def start_generate_views():
     duplicated_plan.CropBoxActive = True
     duplicated_plan.CropBoxVisible = False
 
-    duplicated_plan.Name = "KEY PLAN " + main_floor.Name.replace("-L", "").replace("LEVEL", "").strip()
+    duplicated_plan.Name = "KEY PLAN " + main_floor.Name.replace(remove_prefix, "").replace("LEVEL", "").strip()
   
-    duplicated_plan.LookupParameter("View Group").Set("Tower A")
+    duplicated_plan.LookupParameter("View Group").Set(view_Group)
 
-
-
+    # Copy the text
     copied_ids = ElementTransformUtils.CopyElements(
       text_view, 
       List[ElementId]([text_notes_dict[level].Id]),
@@ -159,11 +170,11 @@ def start_generate_views():
         crop_shape = boundary.GetCropShape()
         filled_region_id = ElementId(1964523)
         filled_region = FilledRegion.Create(doc, filled_region_id, duplicated_plan.Id, crop_shape)
-        filled_region.LookupParameter("Comments").Set(view.Name.replace("UNIT", "KP"))
+        filled_region.LookupParameter("Comments").Set(view.Name.replace("UNIT", "KP").replace(remove_prefix, ""))
 
 @transaction 
 def start_generate_subkp():
-  view_list = get_view_range("Key Plan", "Key Plan")
+  view_list = get_view_range(view_Group, "Key Plan", "Key Plan")
   for keyplan_view in view_list:
     if is_dependent(keyplan_view): continue
 

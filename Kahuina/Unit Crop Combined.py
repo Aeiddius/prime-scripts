@@ -80,15 +80,18 @@ def get_room_curve(group_elements):
   return room_curve
  
 
-def get_view_range(target_view_type, target_discipline, range_value=None):
+def get_view_range(view_group, target_view_type, target_family_type, range_value=None):
     result = []
     view_list = FilteredElementCollector(doc).OfClass(ViewPlan).ToElements()
     for view in view_list:
-        view_type = view.LookupParameter("View Type").AsValueString()
-        if view_type != target_view_type: continue
+        if view.IsTemplate == True: continue
 
-        discipline = view.LookupParameter("Type").AsValueString()
-        if discipline != target_discipline: continue
+        
+        if view.LookupParameter("View Group").AsValueString() != view_group: continue
+
+        if view.LookupParameter("View Type").AsValueString() != target_view_type: continue
+
+        if view.LookupParameter("Type").AsValueString() != target_family_type: continue
 
         if range_value:
           min_range = range_value[0]
@@ -105,6 +108,7 @@ def get_view_range(target_view_type, target_discipline, range_value=None):
           
     return result
 
+
 class UnitDetail:
 
   def __init__(self, min, max, pos, exclude=[]):
@@ -115,13 +119,13 @@ class UnitDetail:
 
 
 prefixes = {
-  # "Lighting": "L",
-  "Infrastructure": "I",
-  # "Device": "DP",
+  "Lighting": "L",
+  # "Infrastructure": "I",
+  "Device": "DP",
 }
 
+view_Group = "Tower A"
 range_value = [4, 43]
-
 do_delete = UnwrapElement(IN[0])
 
 # Range which the units appear
@@ -191,7 +195,7 @@ matrix = {
 def start():
 
   curve_dict = {}
-  crop_plans = get_view_range("Utility Views", "Dynamo Crop Plan")
+  crop_plans = get_view_range(view_Group, "Utility Views", "Dynamo Crop Plan")
   for crop_view in crop_plans:
     
     filled_region_list = FilteredElementCollector(doc, crop_view.Id).OfClass(FilledRegion).ToElements()
@@ -204,7 +208,7 @@ def start():
 
   for target_discipline in prefixes:
     prefix = prefixes[target_discipline]
-    target_views = get_view_range("Presentation Views", target_discipline, range_value)
+    target_views = get_view_range(view_Group, "Presentation Views", target_discipline, range_value)
     
     print("Asds")
     # Apply copy crop

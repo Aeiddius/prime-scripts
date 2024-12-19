@@ -57,7 +57,10 @@ def get_num(str):
   if res:
     return int(res)
   else: return None
-
+def is_dependent(view):
+  if "Dependent " in view.LookupParameter("Dependency").AsValueString():
+    return True
+  return False
 def get_view_range(view_group, target_view_type, target_family_type, range_value=None):
     result = []
     view_list = FilteredElementCollector(doc).OfClass(ViewPlan).ToElements()
@@ -89,42 +92,25 @@ def get_view_range(view_group, target_view_type, target_family_type, range_value
 
 @transaction 
 def start():
-    # titleblock_id = ElementId(2276743)
-    # view_id = ElementId(2637110)
-    # new_sheet = ViewSheet.Create(doc, titleblock_id)
-    # new_sheet.LookupParameter("Sheet Group").Set("Unit Plan")
+  view_list = get_view_range("Tower A", "Presentation Views", "Lighting")
+  titleblock_id = ElementId(1941401)
+  
+  for view in view_list:
+    if not is_dependent(view): continue
 
-    # new_sheet.LookupParameter("Sheet Type").Set("Floor A4")
+    level = view.GenLevel.Name
+
+
+    print(get_element(view.GetPrimaryViewId()).Name, view.Name)
+    new_sheet = ViewSheet.Create(doc, titleblock_id)
+    new_sheet.LookupParameter("Sheet Group").Set("Unit Plan")
+    new_sheet.LookupParameter("Sheet Type").Set(level)
+
+    name = view.Name.replace("UNIT ", "")
+    # break
+
 
     # new_sheet.LookupParameter("Sheet Sub-Type").Set("0402 A-2A")
-
-    # return
-    # pt_cros = XYZ(-0.15,0.75,0)
-    # vp = Viewport.Create(doc, new_sheet.Id, view_id, pt_cros)
-    vp = get_element(3777011) # Lighhtibng
-    vp = get_element(3933291) # Device
-    # print_member(vp)
-    vp_bbox = vp.GetBoxOutline()
-    max_p = vp_bbox.MaximumPoint
-    min_p = vp_bbox.MinimumPoint
-    
-    val = max_p.Subtract(min_p)
-    current_center = vp.GetBoxCenter()
-
-    # vp.SetBoxCenter(XYZ(96.7,26.5,0))
-    # vp.SetBoxCenter(XYZ(0,0,0))
-    # vp.SetBoxCenter(XYZ(2.975649178, 1.864583333, 0.000000000))
-    new_x = (val.X/2) + 0.4
-    new_y = (val.Y/2) + 0.15
-    # new_x = (val.X/2) 
-    # new_y = (val.Y/2) 
-
-    vp.SetBoxCenter(XYZ(new_x, new_y, 0))
-    # vp.SetBoxCenter(XYZ(0, 0, 0))
-
-    # print("Min= ", bottom_left)
-    # print_member(vp_min)
-
 
 start()
 
