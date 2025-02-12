@@ -1,0 +1,401 @@
+{
+  "Uuid": "8eaf32d1-8bf8-4c97-9f12-c8b790a45c92",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "level changer",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "WatchWidth": 420.0,
+      "WatchHeight": 200.0,
+      "Id": "99e349b84b37469d914c3145bb729365",
+      "NodeType": "ExtensionNode",
+      "Inputs": [
+        {
+          "Id": "276fe3de25284c8ba1d818c41cacc2bd",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "19b218f0ca9e4f7aaea2bf108b6166af",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualizes a node's output"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.FileObject, CoreNodeModels",
+      "Id": "f684d7110aaa45c5931157e673594c2a",
+      "NodeType": "ExtensionNode",
+      "Inputs": [
+        {
+          "Id": "cef0c56328ed4d99bdb81cf8085bcf88",
+          "Name": "path",
+          "Description": "Path to the file.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "3de632a4a0264773ad4c4f82cd75db75",
+          "Name": "file",
+          "Description": "File object",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Creates a file object from the given path"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.Filename, CoreNodeModels",
+      "Id": "b6a65acfffa54978b17a78b6f2d27f2b",
+      "NodeType": "ExtensionNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "fa1ad63e7f8b447f85c27e6b8bf9adfe",
+          "Name": "",
+          "Description": "File Path",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows you to select a file on the system and returns its file path",
+      "HintPath": "C:\\Users\\User\\Documents\\Dynamo Scripts\\level changer.py",
+      "InputValue": "C:\\Users\\User\\Documents\\Dynamo Scripts\\level changer.py"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "Id": "3da106f14405416ba730e8d46c29f29a",
+      "NodeType": "FunctionNode",
+      "Inputs": [
+        {
+          "Id": "017a981f42c9484baf589f917bab4fa7",
+          "Name": "file",
+          "Description": "File object to read text from\n\nvar",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "4bda2a41ad5c4173b08cb791e7de43b3",
+          "Name": "string",
+          "Description": "Contents of the text file.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "FunctionSignature": "DSCore.IO.FileSystem.ReadText@var",
+      "Replication": "Auto",
+      "Description": "Reads a text file and returns the contents as a string.\n\nFileSystem.ReadText (file: var): string"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonStringNode, PythonNodeModels",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "c59fdedd2e664e65b55e57a713b8da2c",
+      "NodeType": "ExtensionNode",
+      "Inputs": [
+        {
+          "Id": "d3b8cc2c40844f0f8f3c51742a795083",
+          "Name": "script",
+          "Description": "Python script to run.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "8927533970564305b00010ca91ffda7f",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "08b7ef02f247440b9c22c80d098da995",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs a Python script from a string."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.BoolSelector, CoreNodeModels",
+      "Id": "a3853c566adb4dca88125e7f3395730b",
+      "NodeType": "BooleanInputNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "eddf8af4add540ceb9bfe27fe786d218",
+          "Name": "",
+          "Description": "Boolean",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Enables selection between True and False",
+      "InputValue": true
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Logic.RefactoredIf, CoreNodeModels",
+      "Id": "b0b476ea1a55460886ebf6016884464a",
+      "NodeType": "ExtensionNode",
+      "Inputs": [
+        {
+          "Id": "a28d1540d99d4808bc07b26c9c82efbf",
+          "Name": "test",
+          "Description": "Boolean test",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "1c07fcf758f542d282cfa3dfb32c42be",
+          "Name": "true",
+          "Description": "Returned if test is true",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "f680aee8c4c145e895b90d2d225bf69a",
+          "Name": "false",
+          "Description": "Returned if test is false",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "31a365756db54ad3b82d7a2624a220d9",
+          "Name": "result",
+          "Description": "Result block produced",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Returns the result of either True or False input depending on what boolean value is toggled in the test input. Supports recursion which requires that only a single branch be executed. It's critical that that both True and False branches are isolated and do not interact with each other!"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "3de632a4a0264773ad4c4f82cd75db75",
+      "End": "1c07fcf758f542d282cfa3dfb32c42be",
+      "Id": "1a4ed44787cd427989ad28eb44b8639b",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "3de632a4a0264773ad4c4f82cd75db75",
+      "End": "f680aee8c4c145e895b90d2d225bf69a",
+      "Id": "71d35434d98f4ae2834c2410f19bb21b",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "fa1ad63e7f8b447f85c27e6b8bf9adfe",
+      "End": "cef0c56328ed4d99bdb81cf8085bcf88",
+      "Id": "8d044b4fbe7b44aca0aa5906a98f465c",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "4bda2a41ad5c4173b08cb791e7de43b3",
+      "End": "d3b8cc2c40844f0f8f3c51742a795083",
+      "Id": "55b7fcceb1fc428dba845615affb21d3",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "08b7ef02f247440b9c22c80d098da995",
+      "End": "276fe3de25284c8ba1d818c41cacc2bd",
+      "Id": "4f5a883923464a1fa76c353e14e542ea",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "eddf8af4add540ceb9bfe27fe786d218",
+      "End": "a28d1540d99d4808bc07b26c9c82efbf",
+      "Id": "54cf67214464475da9d8123d25a84b13",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "31a365756db54ad3b82d7a2624a220d9",
+      "End": "017a981f42c9484baf589f917bab4fa7",
+      "Id": "04ed87b797964dbf9ef66509bfa0c435",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "EnableLegacyPolyCurveBehavior": null,
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "3.0",
+      "Data": {}
+    },
+    {
+      "ExtensionGuid": "DFBD9CC0-DB40-457A-939E-8C8555555A9D",
+      "Name": "Generative Design",
+      "Version": "7.1",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "3.0.3.7597",
+      "RunType": "Automatic",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "_Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Id": "99e349b84b37469d914c3145bb729365",
+        "Name": "Watch",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 848.9717967792593,
+        "Y": 215.79618503005335
+      },
+      {
+        "Id": "f684d7110aaa45c5931157e673594c2a",
+        "Name": "File From Path",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 35.19198428930204,
+        "Y": 238.88031804583596
+      },
+      {
+        "Id": "b6a65acfffa54978b17a78b6f2d27f2b",
+        "Name": "File Path",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": -87.90891846899672,
+        "Y": -10.961106664482202
+      },
+      {
+        "Id": "3da106f14405416ba730e8d46c29f29a",
+        "Name": "FileSystem.ReadText",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 287.1277051331965,
+        "Y": 414.27082658748185
+      },
+      {
+        "Id": "c59fdedd2e664e65b55e57a713b8da2c",
+        "Name": "Python Script From String",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 558.601844597795,
+        "Y": 149.80993318242074
+      },
+      {
+        "Id": "a3853c566adb4dca88125e7f3395730b",
+        "Name": "Boolean",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 620.721102531973,
+        "Y": -209.71148016183994
+      },
+      {
+        "Id": "b0b476ea1a55460886ebf6016884464a",
+        "Name": "If",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 374.3705236091144,
+        "Y": -91.24150098681682
+      }
+    ],
+    "Annotations": [],
+    "X": -578.7874639920389,
+    "Y": 28.953862556119105,
+    "Zoom": 0.9944887004195563
+  }
+}
